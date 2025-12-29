@@ -138,4 +138,4 @@ For inquiries, collaboration, or early pilot discussions:
 
 **Contact — Torus Media**
 
-(Direct email, project site link, or brand portfolio may be added here.)
+shortmusicvideos.com
