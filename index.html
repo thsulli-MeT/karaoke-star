@@ -790,17 +790,22 @@
 </div>
 <div id="bottomAdArea" class="bottom-panel">
   <div id="bottomAdArea" class="bottom-panel">
-  <h3 class="panel-title">Karaoke Star Training</h3>
+.video-frame {
+  width: 95%;
+  max-width: 960px;      /* nice big desktop size */
+  margin: 0 auto 12px;   /* centers it */
+  aspect-ratio: 16 / 9;  /* keeps shape */
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 0 16px rgba(0,0,0,.45);
+}
 
-  <div class="video-frame">
-    <iframe
-      src="https://www.youtube.com/embed/yG9wva7HXNk"
-      title="Karaoke Star – Training & Tips"
-      loading="lazy"
-      referrerpolicy="strict-origin-when-cross-origin"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      allowfullscreen
-    ></iframe>
+.video-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
   </div>
 </div>
 
