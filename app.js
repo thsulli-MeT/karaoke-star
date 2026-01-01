@@ -431,63 +431,91 @@ function computeDuckingStrength(level, pitchQuality, keyQuality) {
 }
 
 // ---- Lyrics update (scroll + sustain bar) ----
-function updateLyrics() {
-  if (!backingAudio || LYRICS.length === 0) return;
 
-  const baseTime = backingAudio.currentTime;
-  const t = baseTime * lyricSpeedFactor;
-  let idx = -1;
-
-  for (let i = 0; i < LYRICS.length; i++) {
-    if (LYRICS[i].time <= t) {
-      idx = i;
-    } else {
-      break;
-    }
-  }
-
-  if (idx === -1) {
-    lyricsListEl.innerHTML = "";
-    if (sustainFillEl) sustainFillEl.style.width = "0%";
-    return;
-  }
-
-  const windowLines = [];
-  const indices = [idx - 3, idx - 2, idx - 1, idx, idx + 1, idx + 2, idx + 3];
-  indices.forEach((i) => {
-    if (i >= 0 && i < LYRICS.length) {
-      windowLines.push({ idx: i, text: LYRICS[i].text });
-    }
-  });
-
+function buildLyricsOnce() {
+  if (!lyricsListEl) return;
   lyricsListEl.innerHTML = "";
-  windowLines.forEach((entry) => {
+  if (!LYRICS || !LYRICS.length) return;
+
+  LYRICS.forEach((line) => {
     const div = document.createElement("div");
-    div.textContent = entry.text;
+    div.textContent = line.text;
     div.classList.add("lyric-line");
-    if (entry.idx === idx) {
-      div.classList.add("current");
-    } else if (entry.idx === idx - 1) {
-      div.classList.add("prev");
-    } else if (entry.idx === idx + 1) {
-      div.classList.add("next");
-    }
     lyricsListEl.appendChild(div);
   });
 
-  if (idx >= 0 && idx < LYRICS.length - 1) {
-    const start = LYRICS[idx].time;
-    const end   = LYRICS[idx + 1].time;
-    const span  = Math.max(0.1, end - start);
-    let pct = (t - start) / span;
-    if (pct < 0) pct = 0;
-    if (pct > 1) pct = 1;
-    if (sustainFillEl) sustainFillEl.style.width = `${(pct * 100).toFixed(1)}%`;
-  } else {
-    if (sustainFillEl) sustainFillEl.style.width = "100%";
+  // Center the first lyric line in the sweet-spot zone at start
+  const children = lyricsListEl.querySelectorAll(".lyric-line");
+  if (children.length) {
+    const first = children[0];
+    if (first.scrollIntoView) {
+      first.scrollIntoView({ block: "center", behavior: "auto" });
+    }
   }
 }
 
+function updateLyrics() {
+  if (!lyricsListEl) return;
+  const children = lyricsListEl.querySelectorAll(".lyric-line");
+  if (!children.length) return;
+
+  const containerRect = lyricsListEl.getBoundingClientRect();
+  const midY = containerRect.top + containerRect.height / 2;
+
+  let bestIndex = 0;
+  let bestDist = Infinity;
+
+  children.forEach((el, i) => {
+    const rect = el.getBoundingClientRect();
+    const centerY = rect.top + rect.height / 2;
+    const dist = Math.abs(centerY - midY);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestIndex = i;
+    }
+  });
+
+  children.forEach((el, i) => {
+    el.classList.toggle("current", i === bestIndex);
+  });
+}
+
+// Arrow helpers for manual scroll control
+const lyricsUpBtn   = document.getElementById("lyricsUpBtn");
+const lyricsDownBtn = document.getElementById("lyricsDownBtn");
+
+function scrollLyricsBy(delta) {
+  if (!lyricsListEl) return;
+  const children = lyricsListEl.querySelectorAll(".lyric-line");
+  if (!children.length) return;
+
+  let currentIndex = 0;
+  children.forEach((el, i) => {
+    if (el.classList.contains("current")) currentIndex = i;
+  });
+
+  let targetIndex = currentIndex + delta;
+  if (targetIndex < 0) targetIndex = 0;
+  if (targetIndex >= children.length) targetIndex = children.length - 1;
+
+  const target = children[targetIndex];
+  if (target && target.scrollIntoView) {
+    target.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+  // highlight will be updated by the scroll listener
+}
+
+if (lyricsUpBtn) {
+  lyricsUpBtn.addEventListener("click", () => scrollLyricsBy(-1));
+}
+if (lyricsDownBtn) {
+  lyricsDownBtn.addEventListener("click", () => scrollLyricsBy(1));
+}
+if (lyricsListEl) {
+  lyricsListEl.addEventListener("scroll", () => {
+    updateLyrics();
+  });
+}
 // ---- Main loop ----
 function startDuckingLoop() {
   if (!micAnalyser || !audioCtx) return;
@@ -616,6 +644,9 @@ function updateWeightsFromSliders() {
 
 loadBtn.addEventListener("click", async () => {
   await initMic();
+  // Build full lyrics list once when song is loaded
+  buildLyricsOnce();
+  updateLyrics();
   setStatus("Song ready. Hit Play and start singing.");
   playBtn.disabled = false;
   if (resumeBtn) {
@@ -629,22 +660,6 @@ if (resumeBtn) {
   resumeBtn.addEventListener("click", resumePlayback);
 }
 
-
-// Wire up lyric speed buttons
-const speedButtons = document.querySelectorAll(".speed-btn");
-if (speedButtons && speedButtons.length > 0) {
-  speedButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const val = parseFloat(btn.getAttribute("data-speed") || "1.0");
-      if (isFinite(val) && val > 0.25 && val < 3.0) {
-        lyricSpeedFactor = val;
-        speedButtons.forEach((b) => b.classList.remove("speed-active"));
-        btn.classList.add("speed-active");
-        setStatus(`Lyric speed: ${val < 1.0 ? "Slower" : val > 1.0 ? "Faster" : "Normal"}`);
-      }
-    });
-  });
-}
 
 // Initial UI state
 updateModeLabel();

@@ -171,6 +171,29 @@
       display: inline-flex;
       gap: 4px;
     }
+    .lyrics-arrow-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .lyrics-arrow-btn {
+      background: #2c3150;
+      border: 1px solid #3a3f63;
+      color: #ffffff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      line-height: 1.2;
+    }
+    .lyrics-arrow-btn:hover {
+      background: #393f68;
+    }
+    .lyrics-arrow-hint {
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+
     .speed-btn {
       font-size: 0.7rem;
       padding: 2px 6px;
@@ -218,7 +241,8 @@
       flex-direction: column;
       gap: 6px;
       min-height: 180px;
-      overflow: hidden;
+      max-height: 240px;
+      overflow-y: auto;
     }
     .lyric-line {
       font-size: 1.25rem;
@@ -226,37 +250,19 @@
       opacity: 0.85;
       transition: opacity 0.15s ease, transform 0.15s ease;
     }
-    .lyric-line.current {
-      font-size: 1.05rem;
-      font-weight: 600;
-      opacity: 1;
-    }
+    
+.lyric-line.current {
+  font-size: 1.4em; /* stronger enlargement for sweet-spot line */
+  font-weight: 700;
+}
+
     .lyric-line.next {
       opacity: 0.8;
     }
     .lyric-line.prev {
       opacity: 0.4;
     }
-    /* Override lyric emphasis for a more even, hands-free scroll */
-    .lyric-line.current,
-    .lyric-line.next,
-    .lyric-line.prev {
-      font-weight: 400;
-      opacity: 0.85;
-      transform: none;
-      font-size: 1.25rem;
-    }
-
-    .sustain-bar {
-      margin-top: 8px;
-      height: 6px;
-      border-radius: 999px;
-      background: #2a2d4a;
-      overflow: hidden;
-    }
-    .sustain-bar {
-      display: none;
-    }
+    
 
     #sustainFill {
       height: 100%;
@@ -636,7 +642,7 @@
     <div class="top-banner">
   <img src="ks-app-banner.jpg" alt="Karaoke Star Vocal Training" />
   <div class="banner-badge">
-    <img src="karaoke-star-logo.png" alt="Powered by Side-Chain" />
+    <img src="sidechain-logo2.png" alt="Powered by Side-Chain" />
   </div>
 </div>
 
@@ -715,8 +721,8 @@
     </div>
     <div class="track-controls-row">
       <div class="debug-audio">
-            <audio id="backingAudio" src="1 Instrumental.mp3" controls style="display:none;"></audio>
-            <audio id="guideAudio" src="0 Lead Vocals.mp3" controls style="display:none;"></audio>
+            <audio id="backingAudio" src="1 Instrumental.wav?v=ks1" controls style="display:none;"></audio>
+            <audio id="guideAudio" src="0 Lead Vocals.wav?v=ks1" controls style="display:none;"></audio>
           </div>
     </div>
 
@@ -730,11 +736,11 @@
       <span id="audioTimer">0:00</span>
     </div>
     <div class="timer-row">
-      <span class="timer-label">Lyric Speed</span>
-      <div class="speed-buttons">
-        <button type="button" class="speed-btn" data-speed="0.75">Slower</button>
-        <button type="button" class="speed-btn speed-active" data-speed="1.0">Normal</button>
-        <button type="button" class="speed-btn" data-speed="1.25">Faster</button>
+      <span class="timer-label">Lyrics</span>
+      <div class="lyrics-arrow-row">
+        <button type="button" id="lyricsUpBtn" class="lyrics-arrow-btn">▲</button>
+        <span class="lyrics-arrow-hint">Use arrows or scroll to keep the current line in the sweet spot.</span>
+        <button type="button" id="lyricsDownBtn" class="lyrics-arrow-btn">▼</button>
       </div>
     </div>
     <div class="lyrics-screen">
@@ -768,31 +774,35 @@
     </div>
 
     <div class="placeholder-panel">
-      <div class="placeholder-title">NOTES</div>
-      <div class="placeholder-body">Mix recording and video recording in development</div>
+      <div class="placeholder-title">Open Slot</div>
+      <div class="placeholder-body">Future feature, sponsor, or bonus controls can live here.</div>
     </div>
 
 
   </div>
 
-  <aside id="sideAd" class="ad-spot">
-  <a href="https://shortmusicvideos.com" target="_blank" rel="noopener">
-    <img
-      src="side bar ad.jpg"
-      alt="Karaoke Star — Side Ad"
-      style="width:100%; height:auto; border-radius:14px;"
-    >
-  </a>
-</aside>
+  <aside class="adcol">
+    <div class="adbox ad-right">
+      <div class="adlabel">Sponsor</div>
+      <div class="adplaceholder">300 × 600<br/>or 300 × 250</div>
+    </div>
+  </aside>
 </div>
-<div id="bottomAd" class="ad-spot">
-  <a href="https://www.youtube.com/@sMVshortMusicVideos" target="_blank" rel="noopener">
-    <img
-      src="bottaom ad_.jpg"
-      alt="Karaoke Star — Bottom Banner Ad"
-      style="width:100%; height:auto; border-radius:12px;"
-    >
-  </a>
+<div id="bottomAdArea" class="bottom-panel">
+  <h3 class="panel-title">Karaoke Star Training</h3>
+
+  <div class="video-frame">
+    <iframe
+      width="560"
+      height="315"
+      src="https://www.youtube.com/embed/yG9wva7HXNk?si=aFbDkhxo9RRcAmht"
+      title="Karaoke Star – Training & Tips"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      referrerpolicy="strict-origin-when-cross-origin"
+      allowfullscreen>
+    </iframe>
+  </div>
 </div>
 
 
