@@ -73,7 +73,7 @@ const LYRICS_TEXT = [
   "I got that look, with all the right stuff to back it up, back it up, back it up",
   "I said back it up, my friends and family are all in the crowd, hey y'all",
   "I wanna be,I wanna be a karaoke star, a cutting edge glamorous karaoke star",
-  "ah a ah a, I wanna be a karaoke star, karaoke star" 
+  "ah a ah a, I wanna be a karaoke star, karaoke star", 
   "Don't let up, don't let up, don't let up , don't let Me T up, just yet ",
    "Don't let up, don't let up, don't let up , don't let Me T up",
   "karaoke star, vote me in!"
