@@ -51,8 +51,9 @@ const LYRICS_TEXT = [
   "Like I was made, just for this",
   "So let this flow state take me to a higher level, above the clouds",
   "I wanna be a karaoke star, a genuine karaoke star",
-  "I wanna be a karaoke star, a karaoke star",
-  "Since since since since way back when rock n roll first came of age",
+  "I wanna be a karaoke star, a karaoke star, woah woah",
+  "Karaoke star, woah woah",
+  "so, Since since since since way back when rock n roll first came of age",
   "Bringing in the rhythm, the blues, the guitar heroes with giant hair",
   "And oh so, so so so much make up",
   "I wanna be a karaoke star, a genuine karaoke star",
@@ -64,13 +65,18 @@ const LYRICS_TEXT = [
   "Ready to deliver entertainment so pure",
   "You'll question your own sanity, what's the deal there",
   "I wanna be a karaoke star, a bigger than life karaoke star",
-  "I wanna be a karaoke star, karaoke star",
+  "ah a ah a, I wanna be a karaoke star, karaoke star",
+  "Don't let up, don't let up, don't let up, don't let Me T up just yet",
+  "Don't let up, don't let up, don't let up , don't let Me T up",
   "Don't let up, don't let up, don't let up, don't let Me T up just yet",
   "There is just a little more work to do, to convince you",
   "I got that look, with all the right stuff to back it up, back it up, back it up",
   "I said back it up, my friends and family are all in the crowd, hey y'all",
-  "I wanna be a karaoke star, a cutting edge glamorous karaoke star",
-  "I wanna be a karaoke star, karaoke star, karaoke star, vote me in!"
+  "I wanna be,I wanna be a karaoke star, a cutting edge glamorous karaoke star",
+  "ah a ah a, I wanna be a karaoke star, karaoke star" 
+  "Don't let up, don't let up, don't let up , don't let Me T up, just yet ",
+   "Don't let up, don't let up, don't let up , don't let Me T up",
+  "karaoke star, vote me in!"
 ];
 
 const LYRICS = LYRICS_TEXT.map((text, i) => {
