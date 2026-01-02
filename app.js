@@ -53,7 +53,7 @@ const LYRICS_TEXT = [
   "I wanna be a karaoke star, a genuine karaoke star",
   "I wanna be a karaoke star, a karaoke star, woah woah",
   "Karaoke star, woah woah",
-  "so, Since since since since way back when rock n roll first came of age",
+  "So, since since since since way back when rock n roll first came of age",
   "Bringing in the rhythm, the blues, the guitar heroes with giant hair",
   "And oh so, so so so much make up",
   "I wanna be a karaoke star, a genuine karaoke star",
@@ -65,18 +65,18 @@ const LYRICS_TEXT = [
   "Ready to deliver entertainment so pure",
   "You'll question your own sanity, what's the deal there",
   "I wanna be a karaoke star, a bigger than life karaoke star",
-  "ah a ah a, I wanna be a karaoke star, karaoke star",
+  "Ah a ah a, I wanna be a karaoke star, karaoke star",
   "Don't let up, don't let up, don't let up, don't let Me T up just yet",
-  "Don't let up, don't let up, don't let up , don't let Me T up",
+  "Don't let up, don't let up, don't let up, don't let Me T up",
   "Don't let up, don't let up, don't let up, don't let Me T up just yet",
   "There is just a little more work to do, to convince you",
   "I got that look, with all the right stuff to back it up, back it up, back it up",
   "I said back it up, my friends and family are all in the crowd, hey y'all",
-  "I wanna be,I wanna be a karaoke star, a cutting edge glamorous karaoke star",
-  "ah a ah a, I wanna be a karaoke star, karaoke star", 
-  "Don't let up, don't let up, don't let up , don't let Me T up, just yet ",
-   "Don't let up, don't let up, don't let up , don't let Me T up",
-  "karaoke star, vote me in!"
+  "I wanna be, I wanna be a karaoke star, a cutting edge glamorous karaoke star",
+  "Ah a ah a, I wanna be a karaoke star, karaoke star",
+  "Don't let up, don't let up, don't let up, don't let Me T up, just yet",
+  "Don't let up, don't let up, don't let up, don't let Me T up",
+  "Karaoke star, vote me in!"
 ];
 
 const LYRICS = LYRICS_TEXT.map((text, i) => {
@@ -465,9 +465,13 @@ function updateLyrics() {
 
   const windowLines = [];
   const indices = [idx - 3, idx - 2, idx - 1, idx, idx + 1, idx + 2, idx + 3];
+
   indices.forEach((i) => {
     if (i >= 0 && i < LYRICS.length) {
       windowLines.push({ idx: i, text: LYRICS[i].text });
+    } else {
+      // placeholder blank line to keep current line visually centered
+      windowLines.push({ idx: -1, text: "" });
     }
   });
 
