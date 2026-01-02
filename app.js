@@ -44,34 +44,39 @@ function clearAudioTimer() {
 const SONG_KEY_ROOT = 0; // 0 = C
 const SONG_SCALE = [0, 2, 4, 5, 7, 9, 11];
 
-const LYRICS = [
-  { time: 0.0, text: "Sign me up, sign me up, sign me up, fast, I wanna be a karaoke star" },
-  { time: 6.7, text: "A lip singer with the it factor" },
-  { time: 13.5, text: "I can dance, prance, and strut about" },
-  { time: 20.2, text: "Like I was made, just for this" },
-  { time: 26.9, text: "So let this flow state take me to a higher level, above the clouds" },
-  { time: 33.7, text: "I wanna be a karaoke star, a genuine karaoke star" },
-  { time: 40.4, text: "I wanna be a karaoke star, a karaoke star" },
-  { time: 47.1, text: "Since since since since way back when rock n roll first came of age" },
-  { time: 53.8, text: "Bringing in the rhythm, the blues, the guitar heroes with giant hair" },
-  { time: 60.6, text: "And oh so, so so so much make up" },
-  { time: 67.3, text: "I wanna be a karaoke star, a genuine karaoke star" },
-  { time: 74.0, text: "Check it, check it, check it, check it, I think I can do this" },
-  { time: 80.8, text: "What's the risk, I'm just having more fun than anybody else" },
-  { time: 87.5, text: "That's my cue, time to take over the stage" },
-  { time: 94.2, text: "I'll show them I know the words" },
-  { time: 101.0, text: "I got the emotions on lock down" },
-  { time: 107.7, text: "Ready to deliver entertainment so pure" },
-  { time: 114.4, text: "You'll question your own sanity, what's the deal there" },
-  { time: 121.2, text: "I wanna be a karaoke star, a bigger than life karaoke star" },
-  { time: 127.9, text: "I wanna be a karaoke star, karaoke star" },
-  { time: 134.6, text: "Don't let up, don't let up, don't let up, don't let Me T up just yet" },
-  { time: 141.3, text: "There is just a little more work to do, to convince you" },
-  { time: 148.1, text: "I got that look, with all the right stuff to back it up, back it up, back it up" },
-  { time: 154.8, text: "I said back it up, my friends and family are all in the crowd, hey y'all" },
-  { time: 161.5, text: "I wanna be a karaoke star, a cutting edge glamorous karaoke star" },
-  { time: 168.3, text: "I wanna be a karaoke star, karaoke star, karaoke star, vote me in!" }
+const LYRICS_TEXT = [
+  "Sign me up, sign me up, sign me up, fast, I wanna be a karaoke star",
+  "A lip singer with the it factor",
+  "I can dance, prance, and strut about",
+  "Like I was made, just for this",
+  "So let this flow state take me to a higher level, above the clouds",
+  "I wanna be a karaoke star, a genuine karaoke star",
+  "I wanna be a karaoke star, a karaoke star",
+  "Since since since since way back when rock n roll first came of age",
+  "Bringing in the rhythm, the blues, the guitar heroes with giant hair",
+  "And oh so, so so so much make up",
+  "I wanna be a karaoke star, a genuine karaoke star",
+  "Check it, check it, check it, check it, I think I can do this",
+  "What's the risk, I'm just having more fun than anybody else",
+  "That's my cue, time to take over the stage",
+  "I'll show them I know the words",
+  "I got the emotions on lock down",
+  "Ready to deliver entertainment so pure",
+  "You'll question your own sanity, what's the deal there",
+  "I wanna be a karaoke star, a bigger than life karaoke star",
+  "I wanna be a karaoke star, karaoke star",
+  "Don't let up, don't let up, don't let up, don't let Me T up just yet",
+  "There is just a little more work to do, to convince you",
+  "I got that look, with all the right stuff to back it up, back it up, back it up",
+  "I said back it up, my friends and family are all in the crowd, hey y'all",
+  "I wanna be a karaoke star, a cutting edge glamorous karaoke star",
+  "I wanna be a karaoke star, karaoke star, karaoke star, vote me in!"
 ];
+
+const LYRICS = LYRICS_TEXT.map((text, i) => {
+  // Approximate spacing: 4 seconds per line – adjust if needed
+  return { time: i * 4, text };
+});
 
 
 // Audio elements
@@ -431,91 +436,63 @@ function computeDuckingStrength(level, pitchQuality, keyQuality) {
 }
 
 // ---- Lyrics update (scroll + sustain bar) ----
+function updateLyrics() {
+  if (!backingAudio || LYRICS.length === 0) return;
 
-function buildLyricsOnce() {
-  if (!lyricsListEl) return;
+  const baseTime = backingAudio.currentTime;
+  const t = baseTime * lyricSpeedFactor;
+  let idx = -1;
+
+  for (let i = 0; i < LYRICS.length; i++) {
+    if (LYRICS[i].time <= t) {
+      idx = i;
+    } else {
+      break;
+    }
+  }
+
+  if (idx === -1) {
+    lyricsListEl.innerHTML = "";
+    if (sustainFillEl) sustainFillEl.style.width = "0%";
+    return;
+  }
+
+  const windowLines = [];
+  const indices = [idx - 3, idx - 2, idx - 1, idx, idx + 1, idx + 2, idx + 3];
+  indices.forEach((i) => {
+    if (i >= 0 && i < LYRICS.length) {
+      windowLines.push({ idx: i, text: LYRICS[i].text });
+    }
+  });
+
   lyricsListEl.innerHTML = "";
-  if (!LYRICS || !LYRICS.length) return;
-
-  LYRICS.forEach((line) => {
+  windowLines.forEach((entry) => {
     const div = document.createElement("div");
-    div.textContent = line.text;
+    div.textContent = entry.text;
     div.classList.add("lyric-line");
+    if (entry.idx === idx) {
+      div.classList.add("current");
+    } else if (entry.idx === idx - 1) {
+      div.classList.add("prev");
+    } else if (entry.idx === idx + 1) {
+      div.classList.add("next");
+    }
     lyricsListEl.appendChild(div);
   });
 
-  // Center the first lyric line in the sweet-spot zone at start
-  const children = lyricsListEl.querySelectorAll(".lyric-line");
-  if (children.length) {
-    const first = children[0];
-    if (first.scrollIntoView) {
-      first.scrollIntoView({ block: "center", behavior: "auto" });
-    }
+  if (idx >= 0 && idx < LYRICS.length - 1) {
+    const start = LYRICS[idx].time;
+    const end   = LYRICS[idx + 1].time;
+    const span  = Math.max(0.1, end - start);
+    let pct = (t - start) / span;
+    if (pct < 0) pct = 0;
+    if (pct > 1) pct = 1;
+    if (sustainFillEl) sustainFillEl.style.width = `${(pct * 100).toFixed(1)}%`;
+  } else {
+    if (sustainFillEl) sustainFillEl.style.width = "100%";
   }
 }
 
-function updateLyrics() {
-  if (!lyricsListEl) return;
-  const children = lyricsListEl.querySelectorAll(".lyric-line");
-  if (!children.length) return;
-
-  const containerRect = lyricsListEl.getBoundingClientRect();
-  const midY = containerRect.top + containerRect.height / 2;
-
-  let bestIndex = 0;
-  let bestDist = Infinity;
-
-  children.forEach((el, i) => {
-    const rect = el.getBoundingClientRect();
-    const centerY = rect.top + rect.height / 2;
-    const dist = Math.abs(centerY - midY);
-    if (dist < bestDist) {
-      bestDist = dist;
-      bestIndex = i;
-    }
-  });
-
-  children.forEach((el, i) => {
-    el.classList.toggle("current", i === bestIndex);
-  });
-}
-
-// Arrow helpers for manual scroll control
-const lyricsUpBtn   = document.getElementById("lyricsUpBtn");
-const lyricsDownBtn = document.getElementById("lyricsDownBtn");
-
-function scrollLyricsBy(delta) {
-  if (!lyricsListEl) return;
-  const children = lyricsListEl.querySelectorAll(".lyric-line");
-  if (!children.length) return;
-
-  let currentIndex = 0;
-  children.forEach((el, i) => {
-    if (el.classList.contains("current")) currentIndex = i;
-  });
-
-  let targetIndex = currentIndex + delta;
-  if (targetIndex < 0) targetIndex = 0;
-  if (targetIndex >= children.length) targetIndex = children.length - 1;
-
-  const target = children[targetIndex];
-  if (target && target.scrollIntoView) {
-    target.scrollIntoView({ block: "center", behavior: "smooth" });
-  }
-  // highlight will be updated by the scroll listener
-}
-
-if (lyricsUpBtn) {
-  lyricsUpBtn.addEventListener("click", () => scrollLyricsBy(-1));
-}
-if (lyricsDownBtn) {
-  lyricsDownBtn.addEventListener("click", () => scrollLyricsBy(1));
-}
-if (lyricsListEl) {
-  lyricsListEl.addEventListener("scroll", () => {
-    updateLyrics();
-  });
-}
 // ---- Main loop ----
 function startDuckingLoop() {
   if (!micAnalyser || !audioCtx) return;
@@ -644,9 +621,6 @@ function updateWeightsFromSliders() {
 
 loadBtn.addEventListener("click", async () => {
   await initMic();
-  // Build full lyrics list once when song is loaded
-  buildLyricsOnce();
-  updateLyrics();
   setStatus("Song ready. Hit Play and start singing.");
   playBtn.disabled = false;
   if (resumeBtn) {
@@ -660,6 +634,22 @@ if (resumeBtn) {
   resumeBtn.addEventListener("click", resumePlayback);
 }
 
+
+// Wire up lyric speed buttons
+const speedButtons = document.querySelectorAll(".speed-btn");
+if (speedButtons && speedButtons.length > 0) {
+  speedButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const val = parseFloat(btn.getAttribute("data-speed") || "1.0");
+      if (isFinite(val) && val > 0.25 && val < 3.0) {
+        lyricSpeedFactor = val;
+        speedButtons.forEach((b) => b.classList.remove("speed-active"));
+        btn.classList.add("speed-active");
+        setStatus(`Lyric speed: ${val < 1.0 ? "Slower" : val > 1.0 ? "Faster" : "Normal"}`);
+      }
+    });
+  });
+}
 
 // Initial UI state
 updateModeLabel();
