@@ -45,6 +45,7 @@ const SONG_KEY_ROOT = 0; // 0 = C
 const SONG_SCALE = [0, 2, 4, 5, 7, 9, 11];
 
 const LYRICS_TEXT = [
+  "", "", "",
   "Sign me up, sign me up, sign me up, fast, I wanna be a karaoke star",
   "A lip singer with the it factor",
   "I can dance, prance, and strut about",
@@ -53,7 +54,7 @@ const LYRICS_TEXT = [
   "I wanna be a karaoke star, a genuine karaoke star",
   "I wanna be a karaoke star, a karaoke star, woah woah",
   "Karaoke star, woah woah",
-  "So, since since since since way back when rock n roll first came of age",
+  "so, Since since since since way back when rock n roll first came of age",
   "Bringing in the rhythm, the blues, the guitar heroes with giant hair",
   "And oh so, so so so much make up",
   "I wanna be a karaoke star, a genuine karaoke star",
@@ -65,18 +66,18 @@ const LYRICS_TEXT = [
   "Ready to deliver entertainment so pure",
   "You'll question your own sanity, what's the deal there",
   "I wanna be a karaoke star, a bigger than life karaoke star",
-  "Ah a ah a, I wanna be a karaoke star, karaoke star",
+  "ah a ah a, I wanna be a karaoke star, karaoke star",
   "Don't let up, don't let up, don't let up, don't let Me T up just yet",
-  "Don't let up, don't let up, don't let up, don't let Me T up",
+  "Don't let up, don't let up, don't let up , don't let Me T up",
   "Don't let up, don't let up, don't let up, don't let Me T up just yet",
   "There is just a little more work to do, to convince you",
   "I got that look, with all the right stuff to back it up, back it up, back it up",
   "I said back it up, my friends and family are all in the crowd, hey y'all",
-  "I wanna be, I wanna be a karaoke star, a cutting edge glamorous karaoke star",
-  "Ah a ah a, I wanna be a karaoke star, karaoke star",
-  "Don't let up, don't let up, don't let up, don't let Me T up, just yet",
-  "Don't let up, don't let up, don't let up, don't let Me T up",
-  "Karaoke star, vote me in!"
+  "I wanna be,I wanna be a karaoke star, a cutting edge glamorous karaoke star",
+  "ah a ah a, I wanna be a karaoke star, karaoke star",
+  "Don't let up, don't let up, don't let up , don't let Me T up, just yet ",
+  "Don't let up, don't let up, don't let up , don't let Me T up",
+  "karaoke star, vote me in!"
 ];
 
 const LYRICS = LYRICS_TEXT.map((text, i) => {
@@ -169,6 +170,19 @@ const scoreMeterLabel = document.getElementById("scoreMeterLabel");
 
 const lyricsListEl  = document.getElementById("lyricsList");
 const sustainFillEl = document.getElementById("sustainFill");
+
+if (lyricsListEl && LYRICS_TEXT && Array.isArray(LYRICS_TEXT)) {
+  lyricsListEl.innerHTML = "";
+  LYRICS_TEXT.forEach((line) => {
+    const div = document.createElement("div");
+    div.textContent = line;
+    div.classList.add("lyric-line");
+    // Make text comfortably large by default; you can still tune in CSS
+    div.style.fontSize = "1.2rem";
+    lyricsListEl.appendChild(div);
+  });
+}
+
 
 function setStatus(msg) {
   statusEl.textContent = msg;
@@ -443,64 +457,14 @@ function computeDuckingStrength(level, pitchQuality, keyQuality) {
 
 // ---- Lyrics update (scroll + sustain bar) ----
 function updateLyrics() {
-  if (!backingAudio || LYRICS.length === 0) return;
-
-  const baseTime = backingAudio.currentTime;
-  const t = baseTime * lyricSpeedFactor;
-  let idx = -1;
-
-  for (let i = 0; i < LYRICS.length; i++) {
-    if (LYRICS[i].time <= t) {
-      idx = i;
-    } else {
-      break;
-    }
-  }
-
-  if (idx === -1) {
-    lyricsListEl.innerHTML = "";
-    if (sustainFillEl) sustainFillEl.style.width = "0%";
+  // Keep sustain/progress bar, but leave lyrics as a static scrollable list
+  if (!backingAudio || !sustainFillEl) return;
+  if (!isFinite(backingAudio.duration) || backingAudio.duration <= 0) {
+    sustainFillEl.style.width = "0%";
     return;
   }
-
-  const windowLines = [];
-  const indices = [idx - 3, idx - 2, idx - 1, idx, idx + 1, idx + 2, idx + 3];
-
-  indices.forEach((i) => {
-    if (i >= 0 && i < LYRICS.length) {
-      windowLines.push({ idx: i, text: LYRICS[i].text });
-    } else {
-      // placeholder blank line to keep current line visually centered
-      windowLines.push({ idx: -1, text: "" });
-    }
-  });
-
-  lyricsListEl.innerHTML = "";
-  windowLines.forEach((entry) => {
-    const div = document.createElement("div");
-    div.textContent = entry.text;
-    div.classList.add("lyric-line");
-    if (entry.idx === idx) {
-      div.classList.add("current");
-    } else if (entry.idx === idx - 1) {
-      div.classList.add("prev");
-    } else if (entry.idx === idx + 1) {
-      div.classList.add("next");
-    }
-    lyricsListEl.appendChild(div);
-  });
-
-  if (idx >= 0 && idx < LYRICS.length - 1) {
-    const start = LYRICS[idx].time;
-    const end   = LYRICS[idx + 1].time;
-    const span  = Math.max(0.1, end - start);
-    let pct = (t - start) / span;
-    if (pct < 0) pct = 0;
-    if (pct > 1) pct = 1;
-    if (sustainFillEl) sustainFillEl.style.width = `${(pct * 100).toFixed(1)}%`;
-  } else {
-    if (sustainFillEl) sustainFillEl.style.width = "100%";
-  }
+  const pct = Math.max(0, Math.min(1, backingAudio.currentTime / backingAudio.duration));
+  sustainFillEl.style.width = `${(pct * 100).toFixed(1)}%`;
 }
 
 // ---- Main loop ----
