@@ -61,7 +61,7 @@ const LYRICS = [
   { text: "I knew, that was it — you hurt me, that was it, " },
 
   { text: "you had me,you had me" },
-  { text: "When I was young I used to dream, used to dream" },
+  { text: "When I was young I used to dream, used to dream, used to dream" },
   { text: "About a girl who would steal my heart with just a look" },
   { text: "Fantasy has a way of transforming a man’s direction" },
   { text: "Opinion — don’t let that get in the way" },
