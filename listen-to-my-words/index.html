@@ -1,1 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Karaoke Star – Full Build (Karaoke Star)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #050510;
+      color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px;
+    }
+    
+    #app {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #111322;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    
+    h1 {
+      margin-top: 0;
+      font-size: 1.6rem;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.8rem;
+      margin-bottom: 6px;
+    }
+    button, select, input[type="range"] {
+      border-radius: 999px;
+      border: none;
+      font-size: 0.95rem;
+    }
+    button {
+      padding: 8px 14px;
+      cursor: pointer;
+      background: #4b65ff;
+      color: white;
+    }
+    button[disabled] {
+      opacity: 0.5;
+      cursor: default;
+    }
+    select {
+      padding: 8px 12px;
+      background: #20223a;
+      color: #f5f5f5;
+      cursor: pointer;
+    }
+    #status {
+      font-size: 0.85rem;
+      opacity: 0.8;
+      margin-bottom: 16px;
+      min-height: 1.2em;
+    }
+    .meters-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 8px;
+      margin-bottom: 6px;
+    }
+    .meter-block {
+      font-size: 0.8rem;
+    }
+    .meter-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      opacity: 0.8;
+    }
+    .meter {
+      margin-top: 4px;
+      background: #2a2d4a;
+      border-radius: 999px;
+      overflow: hidden;
+      height: 10px;
+    }
+    .meter-fill {
+      height: 100%;
+      width: 0%;
+      background: #30e88f;
+      transition: width 0.05s linear;
+    }
+    .meter-fill.lead {
+      background: #ff6fb3;
+    }
+    .section-title {
+      font-size: 0.9rem;
+      margin-top: 16px;
+      margin-bottom: 4px;
+      opacity: 0.9;
+    }
+    .slider-row {
+      display: grid;
+      grid-template-columns: 80px 1fr 40px;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.8rem;
+      margin-bottom: 6px;
+    }
+  .placeholder-panel {
+      margin-top: 8px;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px dashed rgba(255,255,255,0.3);
+      font-size: 0.75rem;
+      opacity: 0.9;
+    }
+    .placeholder-title {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .placeholder-body {
+      opacity: 0.85;
+    }
 
+    input[type="range"] {
+      width: 100%;
+      accent-color: #4b65ff;
+    }
+    .score-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      margin-top: 8px;
+      opacity: 0.9;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .track-controls-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      font-size: 0.75rem;
+    }
+
+    .score-row span {
+      white-space: nowrap;
+    }
+    .timer-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-size: 0.8rem;
+      opacity: 0.9;
+    }
+    .timer-label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.7rem;
+      opacity: 0.8;
+    }
+    .speed-buttons {
+      display: inline-flex;
+      gap: 4px;
+    }
+    .lyrics-arrow-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .lyrics-arrow-btn {
+      background: #2c3150;
+      border: 1px solid #3a3f63;
+      color: #ffffff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      line-height: 1.2;
+    }
+    .lyrics-arrow-btn:hover {
+      background: #393f68;
+    }
+    .lyrics-arrow-hint {
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+
+    .speed-btn {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid #444a66;
+      background: #1f2333;
+      color: #f5f5f5;
+      cursor: pointer;
+    }
+    .speed-btn.speed-active {
+      background: #f5c34d;
+      color: #111322;
+      border-color: #f5c34d;
+    }
+
+    #audioTimer {
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+
+    .lyrics-ad-row {
+      display: grid;
+      grid-template-columns: 2.2fr 1fr;
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .lyrics-screen {
+      background: #191b2a;
+      border-radius: 14px;
+      padding: 12px 16px;
+      min-height: 260px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+    .lyrics-label {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    #lyricsList {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 180px;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+    .lyric-line {
+      font-size: 1.25rem;
+      line-height: 1.5;
+      opacity: 0.85;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    
+.lyric-line.current {
+  font-size: 1.4em; /* stronger enlargement for sweet-spot line */
+  font-weight: 700;
+}
+
+    .lyric-line.next {
+      opacity: 0.8;
+    }
+    .lyric-line.prev {
+      opacity: 0.4;
+    }
+    
+
+    #sustainFill {
+      height: 100%;
+      width: 0%;
+      background: #30e88f;
+      transition: width 0.04s linear;
+    }
+    .sponsor-box {
+      background: #191b2a;
+      border-radius: 14px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 140px;
+    }
+    .sponsor-label {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .sponsor-slot {
+      flex: 1;
+      border-radius: 10px;
+      border: 1px dashed rgba(255,255,255,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      opacity: 0.7;
+      text-align: center;
+      padding: 8px;
+    }
+    .debug-audio {
+      margin-top: 16px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: #191b2a;
+      font-size: 0.75rem;
+      opacity: 0.9;
+    }
+    .debug-audio audio {
+      width: 100%;
+      margin-top: 4px;
+    }
+    @media (max-width: 800px) {
+      .lyrics-ad-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  
+    .header {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .header img {
+      max-width: 260px;
+      width: 100%;
+      height: auto;
+      opacity: 0.95;
+    }
+    .sponsor-slot {
+      flex: 1;
+      border-radius: 10px;
+      border: 1px dashed rgba(255,255,255,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      text-align: center;
+    }
+    .sponsor-slot img {
+      max-width: 100%;
+      max-height: 90px;
+      object-fit: contain;
+      opacity: 0.9;
+    }
+
+  
+    .top-banner {
+      width: 100%;
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      background: #0c0d18;
+    }
+    .top-banner img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 18px;
+      margin-top: 18px;
+      align-items: flex-start;
+      width: 100%;
+    }
+    
+    .maincol { min-width: 0; }
+    .adcol {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .adbox {
+      background: #191b2a;
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+    }
+    .adlabel {
+      font-size: 0.72rem;
+      opacity: 0.8;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .adbox img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 10px;
+      opacity: 0.95;
+    }
+    .adplaceholder {
+      height: 540px;
+      border-radius: 10px;
+      border: 1px dashed rgba(255,255,255,0.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 0.9rem;
+      opacity: 0.7;
+      line-height: 1.3;
+    }
+    .ad-top img {
+      max-height: 170px;
+      object-fit: contain;
+    }
+
+    .bottom-ad {
+      margin-top: 14px;
+      background: #191b2a;
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+    }
+    .adleaderboard {
+      width: 100%;
+      max-width: 728px;
+      height: 90px;
+      border-radius: 10px;
+      border: 1px dashed rgba(255,255,255,0.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      font-size: 0.95rem;
+      opacity: 0.7;
+    }
+
+    @media (max-width: 900px) {
+      
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 18px;
+      margin-top: 18px;
+      align-items: flex-start;
+      width: 100%;
+    }
+    
+      .adplaceholder { height: 250px; }
+    }
+
+  
+    .top-banner {
+      position: relative;
+      width: 100%;
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      background: #0c0d18;
+    }
+    .top-banner img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .banner-badge {
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(5,5,16,0.9);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.7);
+      transform: translateY(0);
+    }
+    .banner-badge img {
+      height: 52px;
+      width: auto;
+      display: block;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 18px;
+      margin-top: 18px;
+      align-items: flex-start;
+      width: 100%;
+    }
+    .maincol {
+      min-width: 0;
+    }
+    .adcol {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .adbox {
+      background: #191b2a;
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+    }
+    .adlabel {
+      font-size: 0.72rem;
+      opacity: 0.8;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .adplaceholder {
+      height: 540px;
+      border-radius: 10px;
+      border: 1px dashed rgba(255,255,255,0.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 0.9rem;
+      opacity: 0.7;
+      line-height: 1.3;
+    }
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .adplaceholder {
+        height: 250px;
+      }
+    }
+
+    .score-meter-block {
+      margin-top: 6px;
+    }
+    .score-meter-block .meter {
+      margin-top: 4px;
+    }
+
+  
+    
+    .live-score-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .live-meter {
+      display: inline-flex;
+      align-items: flex-end;
+      justify-content: center;
+      width: 22px;
+      height: 64px;
+      border-radius: 999px;
+      background: #2a2d4a;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 4px 10px rgba(0,0,0,0.6);
+    }
+    .live-meter #liveMeterFill {
+      display: block;
+      width: 100%;
+      height: 0%;
+      background: #30e88f;
+      transition: height 0.08s linear, background-color 0.1s linear;
+    }
+
+  
+    .record-controls {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.8rem;
+    }
+    .record-label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+    .record-buttons {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .record-buttons button {
+      font-size: 0.78rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #2b3560;
+      color: #f4f4ff;
+    }
+    .record-buttons button[disabled] {
+      opacity: 0.5;
+      cursor: default;
+    }
+    .record-status {
+      opacity: 0.8;
+      font-size: 0.75rem;
+    }
+    .record-status-row {
+      margin-top: 4px;
+      font-size: 0.75rem;
+      opacity: 0.85;
+    }
+
+
+  
+    .record-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 8px;
+    }
+  .track-play-buttons {
+      display: flex;
+      justify-content: flex-start;
+      gap: 8px;
+      margin-top: 4px;
+      margin-bottom: 4px;
+      font-size: 0.8rem;
+    }
+
+    .record-inline button {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #2b3560;
+      color: #f4f4ff;
+    }
+    .record-inline button[disabled] {
+      opacity: 0.5;
+      cursor: default;
+    }
+    .record-status {
+      opacity: 0.8;
+      font-size: 0.75rem;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="top-banner">
+  <img src="ks-app-banner.jpg" alt="Karaoke Star Vocal Training" />
+  <div class="banner-badge">
+    <img src="sidechain-logo2.png" alt="Powered by Side-Chain" />
+  </div>
+</div>
+
+    <div id="status">Click “Load Song” to begin.</div>
+    <div class="tips-inline">
+      <strong>Quick tips:</strong>
+      <span>Use headphones to avoid feedback and mic bleed. Use a decent mic if you can, get close (6–10 inches), and keep background noise low. Your recording is saved only to your device.</span>
+    </div>
+
+
+    <div class="controls">
+      <button id="loadBtn">Load Song</button>
+      <button id="playBtn" disabled>Play</button>
+      <button id="resumeBtn" disabled>Resume</button>
+      <button id="stopBtn" disabled>Stop</button>
+
+      <select id="modeSelect">
+        <option value="share">Share</option>
+        <option value="assist">Assist</option>
+        <option value="ghost">Ghost</option>
+      </select>
+
+      <select id="engineSelect">
+        <option value="manual">Engine: Manual</option>
+        <option value="auto">Engine: Auto</option>
+      </select>
+
+              <div class="record-inline">
+      <button id="recordBtn">Start Recording</button>
+      <button id="stopRecordBtn" disabled>Stop &amp; Download</button>
+      <button id="replayBtn" disabled>Replay Last Take</button>
+      <button id="stopReplayBtn" disabled>Stop Replay</button>
+      <button type="button" id="playBackingBtn" onclick="var a=document.getElementById('backingAudio'); if(a){a.currentTime=0; a.play();}">▶ Backing</button>
+      <button type="button" id="playGuideBtn" onclick="var a=document.getElementById('guideAudio'); if(a){a.currentTime=0; a.play();}">▶ Lead</button>
+      <button type="button" id="stopTracksBtn" onclick="var b=document.getElementById('backingAudio'); var g=document.getElementById('guideAudio'); if(b){b.pause();} if(g){g.pause();}">■ Stop Tracks</button>
+    </div>
+    <div class="record-status-row">
+      <span id="recordStatus" class="record-status">Not recording</span>
+    </div>
+    <div class="record-status-row">
+      <span id="recordStatus" class="record-status">Not recording</span>
+    </div>
+    </div>
+
+    <div class="meters-grid">
+      <div class="meter-block">
+        <div class="meter-label-row">
+          <span>Singer (Mic)</span>
+          <span id="micLabelVal">0%</span>
+        </div>
+        <div class="meter">
+          <div id="micMeter" class="meter-fill"></div>
+        </div>
+      </div>
+      <div class="meter-block">
+        <div class="meter-label-row">
+          <span>Lead Vocal</span>
+          <span id="leadLabelVal">100%</span>
+        </div>
+        <div class="meter">
+          <div id="leadMeter" class="meter-fill lead"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="score-row">
+      <span id="modeLabel">Mode: Share · Engine: Manual</span>
+      <span class="live-score-wrap">
+        Live: <span id="scoreVal">0</span>
+        <span class="live-meter">
+          <span id="liveMeterFill"></span>
+        </span>
+      </span>
+      <span>Run: <span id="runScoreVal">0</span></span>
+      <span>Best Tonight: <span id="bestScoreVal">0</span></span>
+    </div>
+    <div class="track-controls-row">
+      <div class="debug-audio">
+            <audio id="backingAudio" src="1 Instrumental.wav?v=ks1" controls style="display:none;"></audio>
+            <audio id="guideAudio" src="0 Lead Vocals.wav?v=ks1" controls style="display:none;"></audio>
+          </div>
+    </div>
+
+
+    
+<div class="layout">
+  <div class="maincol">
+    
+    <div class="timer-row">
+      <span class="timer-label">Time</span>
+      <span id="audioTimer">0:00</span>
+    </div>
+    <div class="timer-row">
+      <span class="timer-label">Lyrics</span>
+      <div class="lyrics-arrow-row">
+        <button type="button" id="lyricsUpBtn" class="lyrics-arrow-btn">▲</button>
+        <span class="lyrics-arrow-hint">Use arrows or scroll to keep the current line in the sweet spot.</span>
+        <button type="button" id="lyricsDownBtn" class="lyrics-arrow-btn">▼</button>
+      </div>
+    </div>
+    <div class="lyrics-screen">
+      <div class="lyrics-label">Lyrics</div>
+      <div id="lyricsList">
+        <div class="lyric-line" style="opacity:0.7;">Lyrics will appear here when the song plays…</div>
+      </div>
+      <div class="sustain-bar"><div id="sustainFill"></div></div>
+    </div>
+
+    <div class="section-title">Control Weights</div>
+    <div style="font-size:0.75rem; opacity:0.75; margin-bottom:6px;">
+      In <strong>manual</strong> mode you can shape how strongly Key, Pitch, and Volume affect ducking.
+      In <strong>auto</strong> mode they will all be treated as fully on (placeholder for now).
+    </div>
+
+    <div class="slider-row">
+      <span>Key</span>
+      <input id="keySlider" type="range" min="0" max="100" value="100" />
+      <span id="keyVal">100</span>
+    </div>
+    <div class="slider-row">
+      <span>Pitch</span>
+      <input id="pitchSlider" type="range" min="0" max="100" value="100" />
+      <span id="pitchVal">100</span>
+    </div>
+    <div class="slider-row">
+      <span>Volume</span>
+      <input id="volSlider" type="range" min="0" max="100" value="100" />
+      <span id="volVal">100</span>
+    </div>
+
+    <div class="placeholder-panel">
+      <div class="placeholder-title">Open Slot</div>
+      <div class="placeholder-body">Future feature, sponsor, or bonus controls can live here.</div>
+    </div>
+
+
+  </div>
+
+  <aside class="adcol">
+    <div class="adbox ad-right">
+      <div class="adlabel">Sponsor</div>
+      <div class="adplaceholder">300 × 600<br/>or 300 × 250</div>
+    </div>
+  </aside>
+</div>
+<div id="bottomAdArea" class="bottom-panel">
+  <h3 class="panel-title">Karaoke Star Training</h3>
+
+  <div id="bottomAdArea" class="bottom-panel">
+  <h3 class="panel-title">Karaoke Star Training Video</h3>
+
+<div class="video-frame">
+  <iframe
+    src="https://www.youtube.com/embed/yG9wva7HXNk?rel=0"
+    title="Karaoke Star Training Video"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen>
+  </iframe>
+</div>
+  </div>
+</div>
+
+</div>
+
+
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
