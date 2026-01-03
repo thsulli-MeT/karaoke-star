@@ -69,11 +69,7 @@ const LYRICS = [
   { text: "Gonna, Pour it" },
   { text: "Gonna, Pour it out, for you" },
 
-  { text: "" },
-  { text: "(if possible can we get code without timing" },
-  { text: "so it just scrolls manually)" },
-
-  { text: "" },
+  
   { text: "I found my inspiration" },
   { text: "It was my desperation" },
   { text: "You think I'm joking" },
