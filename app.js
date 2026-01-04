@@ -44,8 +44,11 @@ function clearAudioTimer() {
 const SONG_KEY_ROOT = 0; // 0 = C
 const SONG_SCALE = [0, 2, 4, 5, 7, 9, 11];
 
-// Simple manual-scroll lyric format (no timing)
+// Manual-scroll lyrics — safe format for current app logic
 const LYRICS = [
+
+  "", "", "", "",   // top padding so first line starts near sweet-spot
+
   "Sign me up, sign me up, sign me up, fast, I wanna be a karaoke star",
   "A lip singer with the it factor",
   "I can dance, prance, and strut about",
@@ -55,12 +58,14 @@ const LYRICS = [
   "I wanna be a karaoke star, a karaoke star",
 
   "",
+
   "Since since since since way back when rock n roll first came of age",
   "Bringing in the rhythm, the blues, the guitar heroes with giant hair",
   "And oh so, so so so much make up",
   "I wanna be a karaoke star, a genuine karaoke star",
 
   "",
+
   "Check it, check it, check it, check it, I think I can do this",
   "What's the risk, I'm just having more fun than anybody else",
   "That's my cue, time to take over the stage",
@@ -72,17 +77,19 @@ const LYRICS = [
   "I wanna be a karaoke star, karaoke star",
 
   "",
-  "Don't let up, don't let up, don't let Me T up, just yet",
+
   "Don't let up, don't let up, don't let Me T up, just yet",
   "Don't let up, don't let up, don't let Me T up, just yet",
 
   "",
+
   "There is just a little more work to do, to convince you",
   "I got that look, with all the right stuff to back it up, back it up, back it up",
   "I said back it up, my friends and family are all in the crowd, hey y'all",
   "I wanna be a karaoke star, a cutting edge glamorous karaoke star",
   "I wanna be a karaoke star, karaoke star, karaoke star, vote me in!"
 ];
+
 
 
 
