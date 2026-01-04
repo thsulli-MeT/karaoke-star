@@ -74,6 +74,7 @@ const LYRICS = [
   "",
   "Don't let up, don't let up, don't let Me T up, just yet",
   "Don't let up, don't let up, don't let Me T up, just yet",
+  "Don't let up, don't let up, don't let Me T up, just yet",
 
   "",
   "There is just a little more work to do, to convince you",
