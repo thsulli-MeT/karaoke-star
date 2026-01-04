@@ -50,7 +50,7 @@ const LYRICS = [
 
   { text: "Pop pop pop, popping up" },
   { text: "Even when they, trying to keep me down" },
-  { text: "Pop pop popping up, uh Oh" },
+  { text: "Pop pop popping up, oh Oh" },
   { text: "When seconds, seem like an eternity" },
   { text: "Getting smashed, don't hit that reef" },
   { text: "Pop pop pop, popping up" },
@@ -70,7 +70,7 @@ const LYRICS = [
   { text: "So I pay my dues and give respects" },
   { text: "I am, Popping up, even when the surf’s trying to keep me down" },
   { text: "Pop pop popping up" },
-  { text: "Pop pop" },
+  { text: "Popping up poping up" },
 
   { text: "" },
   { text: "You think, it is hard now" },
@@ -82,7 +82,7 @@ const LYRICS = [
   { text: "Where’s the jet ski" },
   { text: "I am, just a mere mortal, not aquaman" },
   { text: "Pop pop popping up" },
-  { text: "Pop pop popping up" },
+  { text: "Pop pop popping up, pop,pop, pop, poping up" },
 
   { text: "" },
   { text: "I’ve gone backwards, over the falls, at Ocean Beach" },
@@ -93,7 +93,7 @@ const LYRICS = [
   { text: "Pop pop popping up" },
   { text: "So don't turn your back on her" },
   { text: "Or, she’ll get you too" },
-  { text: "Pop pop popping up" },
+  { text: "Pop pop popping up, popping up" },
   { text: "Pop pop popping up" }
 ];
 
