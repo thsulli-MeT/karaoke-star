@@ -66,6 +66,7 @@ const LYRICS = [
   { text: "Fantasy, has a way of transforming a man’s direction" },
   { text: "Opinion — don’t let that get in the way" },
   { text: "I felt it when we locked eyes" },
+  { text: "When we locked eyes" },
   { text: "The world came to a screaming stop" },
   { text: "When we locked eyes" },
   { text: "I knew this was it" },
