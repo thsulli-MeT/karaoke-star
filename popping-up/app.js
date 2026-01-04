@@ -68,7 +68,7 @@ const LYRICS = [
   { text: "Pop pop popping up" },
   { text: "Mother nature, she always bats, last" },
   { text: "So I pay my dues and give respects" },
-  { text: "Popping up, even when the surf’s trying to keep me down" },
+  { text: "I am, Popping up, even when the surf’s trying to keep me down" },
   { text: "Pop pop popping up" },
   { text: "Pop pop" },
 
