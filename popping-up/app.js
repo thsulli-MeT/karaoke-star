@@ -49,14 +49,14 @@ const LYRICS = [
   { text: "" },
 
   { text: "Pop pop pop, popping up" },
-  { text: "Even when they, trying to keep me down" },
+  { text: "Even when they, try, they trying to keep me down" },
   { text: "Pop pop popping up, oh Oh" },
   { text: "When seconds, seem like an eternity" },
   { text: "Getting smashed, don't hit that reef" },
   { text: "Pop pop pop, popping up" },
   { text: "Even when the oceans trying to keep me down" },
   { text: "Pop pop popping up" },
-  { text: "Pop pop popping up" },
+  { text: "Pop pop popping up, pop pop pop, popping up" },
 
   { text: "" },
   { text: "Under the influence of, wild men" },
@@ -68,9 +68,9 @@ const LYRICS = [
   { text: "Pop pop popping up" },
   { text: "Mother nature, she always bats, last" },
   { text: "So I pay my dues and give respects" },
-  { text: "I am, Popping up, even when the surf’s trying to keep me down" },
+  { text: "I am Popping up, even when the surf’s trying to keep me down" },
   { text: "Pop pop popping up" },
-  { text: "Popping up poping up" },
+  { text: "Popping up, popping up" },
 
   { text: "" },
   { text: "You think, it is hard now" },
@@ -82,7 +82,7 @@ const LYRICS = [
   { text: "Where’s the jet ski" },
   { text: "I am, just a mere mortal, not aquaman" },
   { text: "Pop pop popping up" },
-  { text: "Pop pop popping up, pop,pop, pop, poping up" },
+  { text: "Pop pop pop popping up, pop,pop, pop, pop pop, popping up" },
 
   { text: "" },
   { text: "I’ve gone backwards, over the falls, at Ocean Beach" },
