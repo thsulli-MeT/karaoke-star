@@ -77,6 +77,7 @@ const LYRICS = [
   { text: "" },
   { text: "Don't let up, don't let up, don't let Me T up, just yet" },
   { text: "Don't let up, don't let up, don't let Me T up, just yet" },
+  { text: "Don't let up, don't let up, don't let Me T up, just yet" },
 
   { text: "" },
   { text: "There is just a little more work to do, to convince you" },
