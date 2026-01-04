@@ -50,7 +50,7 @@ const LYRICS = [
 
   { text: "Pop pop pop, popping up" },
   { text: "Even when they, trying to keep me down" },
-  { text: "Pop pop popping up" },
+  { text: "Pop pop popping up, uh Oh" },
   { text: "When seconds, seem like an eternity" },
   { text: "Getting smashed, don't hit that reef" },
   { text: "Pop pop pop, popping up" },
@@ -62,6 +62,7 @@ const LYRICS = [
   { text: "Under the influence of, wild men" },
   { text: "Who like to ride, mountains, of whitewater" },
   { text: "A full on avalanche" },
+  { text: "Pop pop pop, popping up" },
   { text: "Pop pop pop, popping up" },
   { text: "Even when she is trying to keep me down" },
   { text: "Pop pop popping up" },
