@@ -44,34 +44,45 @@ function clearAudioTimer() {
 const SONG_KEY_ROOT = 0; // 0 = C
 const SONG_SCALE = [0, 2, 4, 5, 7, 9, 11];
 
+// Simple manual-scroll lyric format (no timing)
 const LYRICS = [
-  { time: 0.0, text: "Sign me up, sign me up, sign me up, fast, I wanna be a karaoke star" },
-  { time: 6.7, text: "A lip singer with the it factor" },
-  { time: 13.5, text: "I can dance, prance, and strut about" },
-  { time: 20.2, text: "Like I was made, just for this" },
-  { time: 26.9, text: "So let this flow state take me to a higher level, above the clouds" },
-  { time: 33.7, text: "I wanna be a karaoke star, a genuine karaoke star" },
-  { time: 40.4, text: "I wanna be a karaoke star, a karaoke star" },
-  { time: 47.1, text: "Since since since since way back when rock n roll first came of age" },
-  { time: 53.8, text: "Bringing in the rhythm, the blues, the guitar heroes with giant hair" },
-  { time: 60.6, text: "And oh so, so so so much make up" },
-  { time: 67.3, text: "I wanna be a karaoke star, a genuine karaoke star" },
-  { time: 74.0, text: "Check it, check it, check it, check it, I think I can do this" },
-  { time: 80.8, text: "What's the risk, I'm just having more fun than anybody else" },
-  { time: 87.5, text: "That's my cue, time to take over the stage" },
-  { time: 94.2, text: "I'll show them I know the words" },
-  { time: 101.0, text: "I got the emotions on lock down" },
-  { time: 107.7, text: "Ready to deliver entertainment so pure" },
-  { time: 114.4, text: "You'll question your own sanity, what's the deal there" },
-  { time: 121.2, text: "I wanna be a karaoke star, a bigger than life karaoke star" },
-  { time: 127.9, text: "I wanna be a karaoke star, karaoke star" },
-  { time: 134.6, text: "Don't let up, don't let up, don't let up, don't let Me T up just yet" },
-  { time: 141.3, text: "There is just a little more work to do, to convince you" },
-  { time: 148.1, text: "I got that look, with all the right stuff to back it up, back it up, back it up" },
-  { time: 154.8, text: "I said back it up, my friends and family are all in the crowd, hey y'all" },
-  { time: 161.5, text: "I wanna be a karaoke star, a cutting edge glamorous karaoke star" },
-  { time: 168.3, text: "I wanna be a karaoke star, karaoke star, karaoke star, vote me in!" }
+  "Sign me up, sign me up, sign me up, fast, I wanna be a karaoke star",
+  "A lip singer with the it factor",
+  "I can dance, prance, and strut about",
+  "Like I was made, just for this",
+  "So let this flow state take me to a higher level, above the clouds",
+  "I wanna be a karaoke star, a genuine karaoke star",
+  "I wanna be a karaoke star, a karaoke star",
+
+  "",
+  "Since since since since way back when rock n roll first came of age",
+  "Bringing in the rhythm, the blues, the guitar heroes with giant hair",
+  "And oh so, so so so much make up",
+  "I wanna be a karaoke star, a genuine karaoke star",
+
+  "",
+  "Check it, check it, check it, check it, I think I can do this",
+  "What's the risk, I'm just having more fun than anybody else",
+  "That's my cue, time to take over the stage",
+  "I'll show them I know the words",
+  "I got the emotions on lock down",
+  "Ready to deliver entertainment so pure",
+  "You'll question your own sanity, what's the deal there",
+  "I wanna be a karaoke star, a bigger than life karaoke star",
+  "I wanna be a karaoke star, karaoke star",
+
+  "",
+  "Don't let up, don't let up, don't let Me T up, just yet",
+  "Don't let up, don't let up, don't let Me T up, just yet",
+
+  "",
+  "There is just a little more work to do, to convince you",
+  "I got that look, with all the right stuff to back it up, back it up, back it up",
+  "I said back it up, my friends and family are all in the crowd, hey y'all",
+  "I wanna be a karaoke star, a cutting edge glamorous karaoke star",
+  "I wanna be a karaoke star, karaoke star, karaoke star, vote me in!"
 ];
+
 
 
 // Audio elements
