@@ -139,3 +139,13 @@ For inquiries, collaboration, or early pilot discussions:
 **Contact — Torus Media**
 
 shortmusicvideos.com
+
+## Side-Chain Spin-Off Prototype
+
+A standalone prototype has been added under `side-chain/` to keep Karaoke Star intact while testing a licensing-friendly Side-Chain app variant.
+
+Included in this spin-off:
+- built-in sample song menu
+- custom lead/instrument stem upload
+- adaptive Assist/Share/Ghost blend controls
+- simple admin prototype for extending the library and exporting JSON metadata
