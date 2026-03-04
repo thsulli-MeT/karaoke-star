@@ -149,3 +149,4 @@ Included in this spin-off:
 - custom lead/instrument stem upload
 - adaptive Assist/Share/Ghost blend controls
 - simple admin prototype for extending the library and exporting JSON metadata
+- in-app recording, replay, mic gain (+/- dB), and downloadable mix files named with song + score
