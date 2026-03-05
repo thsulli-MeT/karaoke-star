@@ -1,14 +1,6 @@
 const builtInSongs = [
-  {
-    title: "Karaoke Star Demo - Root",
-    lead: "../0 Lead Vocals.mp3",
-    instrumental: "../1 Instrumental.mp3",
-  },
-  {
-    title: "Pour It Out - Sample",
-    lead: "../pour-it-out/0 Lead Vocals_01.mp3",
-    instrumental: "../pour-it-out/1 Instrumental_01.mp3",
-  },
+  { title: "Karaoke Star Demo - Root", lead: "../0 Lead Vocals.mp3", instrumental: "../1 Instrumental.mp3" },
+  { title: "Pour It Out - Sample", lead: "../pour-it-out/0 Lead Vocals_01.mp3", instrumental: "../pour-it-out/1 Instrumental_01.mp3" },
 ];
 
 const ADMIN_ALLOWLIST = ["you@example.com"];
@@ -18,6 +10,7 @@ const loadSongBtn = document.getElementById("loadSongBtn");
 const leadUpload = document.getElementById("leadUpload");
 const instUpload = document.getElementById("instUpload");
 const loadCustomBtn = document.getElementById("loadCustomBtn");
+
 const micBtn = document.getElementById("micBtn");
 const playBtn = document.getElementById("playBtn");
 const pauseBtn = document.getElementById("pauseBtn");
@@ -29,7 +22,7 @@ const recordGainValue = document.getElementById("recordGainValue");
 const recordBtn = document.getElementById("recordBtn");
 const stopRecordBtn = document.getElementById("stopRecordBtn");
 const replayBtn = document.getElementById("replayBtn");
-const downloadBtn = document.getElementById("downloadBtn");
+const downloadWavBtn = document.getElementById("downloadWavBtn");
 
 const micMeter = document.getElementById("micMeter");
 const micValue = document.getElementById("micValue");
@@ -52,52 +45,39 @@ const backingAudio = new Audio();
 const leadAudio = new Audio();
 backingAudio.crossOrigin = "anonymous";
 leadAudio.crossOrigin = "anonymous";
-backingAudio.muted = true;
-leadAudio.muted = true;
+backingAudio.preload = "auto";
+leadAudio.preload = "auto";
 
-let audioCtx;
+let micCtx;
+let micStream;
 let micAnalyser;
 let micData;
-let micSource;
-let micStream;
 let meterLoop;
 let currentSong;
 let sessionScore = 0;
 let isPaused = false;
 let adminAuthed = false;
 
-let backingSource;
-let leadSource;
-let backingGain;
-let leadGainNode;
-let micGainNode;
-let masterGain;
-let recordDestination;
+let recCtx;
+let recDestination;
+let recMicGain;
+let recLeadGain;
+let recInstGain;
+let recLeadSource;
+let recInstSource;
+let recMicSource;
 
 let mediaRecorder;
 let recordedChunks = [];
 let recordingBlob = null;
 let recordingUrl = "";
 
-function setStatus(msg) {
-  statusEl.textContent = msg;
-}
+function setStatus(msg) { statusEl.textContent = msg; }
+function formatDb(v) { return `${Number(v) >= 0 ? "+" : ""}${Number(v)} dB`; }
+function dbToGain(db) { return 10 ** (db / 20); }
 
-function formatDb(value) {
-  const num = Number(value);
-  return `${num >= 0 ? "+" : ""}${num} dB`;
-}
-
-function dbToGain(db) {
-  return 10 ** (db / 20);
-}
-
-function applyMicGain() {
-  const db = Number(recordGain.value);
-  recordGainValue.textContent = formatDb(db);
-  if (micGainNode) {
-    micGainNode.gain.value = dbToGain(db);
-  }
+function sanitizeForFilename(text) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "side-chain";
 }
 
 function hydrateSongMenu() {
@@ -128,44 +108,20 @@ function computeLeadVolume(mode, micLevel) {
   return Math.max(0, 1 - micLevel * 1.35);
 }
 
-function setupAudioGraph() {
-  if (!audioCtx || !micSource || !leadAudio.src || !backingAudio.src) return;
-  if (masterGain) return;
-
-  backingSource = audioCtx.createMediaElementSource(backingAudio);
-  leadSource = audioCtx.createMediaElementSource(leadAudio);
-
-  backingGain = audioCtx.createGain();
-  leadGainNode = audioCtx.createGain();
-  micGainNode = audioCtx.createGain();
-  masterGain = audioCtx.createGain();
-  recordDestination = audioCtx.createMediaStreamDestination();
-
-  backingGain.gain.value = 1;
-  leadGainNode.gain.value = 1;
-  micGainNode.gain.value = dbToGain(Number(recordGain.value));
-  masterGain.gain.value = 1;
-
-  backingSource.connect(backingGain);
-  leadSource.connect(leadGainNode);
-  micSource.connect(micGainNode);
-
-  backingGain.connect(masterGain);
-  leadGainNode.connect(masterGain);
-  micGainNode.connect(masterGain);
-
-  masterGain.connect(audioCtx.destination);
-  masterGain.connect(recordDestination);
+function updateRecordingMixGains() {
+  if (!recLeadGain || !recMicGain) return;
+  const micLevel = getMicLevel();
+  const leadLevel = computeLeadVolume(modeSelect.value, micLevel);
+  recLeadGain.gain.value = leadLevel;
+  recMicGain.gain.value = dbToGain(Number(recordGain.value));
 }
 
 function tickMeters() {
   const micLevel = getMicLevel();
-  const mode = modeSelect.value;
-  const leadLevel = computeLeadVolume(mode, micLevel);
+  const leadLevel = computeLeadVolume(modeSelect.value, micLevel);
 
-  if (leadGainNode) {
-    leadGainNode.gain.value = leadLevel;
-  }
+  leadAudio.volume = leadLevel;
+  updateRecordingMixGains();
 
   const micPct = Math.round(micLevel * 100);
   const leadPct = Math.round(leadLevel * 100);
@@ -174,7 +130,6 @@ function tickMeters() {
 
   micMeter.style.width = `${micPct}%`;
   micValue.textContent = String(micPct);
-
   leadMeter.style.width = `${leadPct}%`;
   leadValue.textContent = String(leadPct);
 
@@ -185,27 +140,68 @@ function tickMeters() {
   meterLoop = requestAnimationFrame(tickMeters);
 }
 
+function applyMicGain() {
+  recordGainValue.textContent = formatDb(recordGain.value);
+  if (recMicGain) {
+    recMicGain.gain.value = dbToGain(Number(recordGain.value));
+  }
+}
+
+async function setupRecordingBus() {
+  if (!micStream) return;
+  if (recDestination) return;
+
+  recCtx = new (window.AudioContext || window.webkitAudioContext)();
+  recDestination = recCtx.createMediaStreamDestination();
+
+  const leadStream = leadAudio.captureStream();
+  const instStream = backingAudio.captureStream();
+
+  recLeadSource = recCtx.createMediaStreamSource(leadStream);
+  recInstSource = recCtx.createMediaStreamSource(instStream);
+  recMicSource = recCtx.createMediaStreamSource(micStream);
+
+  recLeadGain = recCtx.createGain();
+  recInstGain = recCtx.createGain();
+  recMicGain = recCtx.createGain();
+
+  recInstGain.gain.value = 1;
+  recLeadGain.gain.value = 1;
+  recMicGain.gain.value = dbToGain(Number(recordGain.value));
+
+  recLeadSource.connect(recLeadGain).connect(recDestination);
+  recInstSource.connect(recInstGain).connect(recDestination);
+  recMicSource.connect(recMicGain).connect(recDestination);
+}
+
 async function enableMic() {
   try {
     micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-    micSource = audioCtx.createMediaStreamSource(micStream);
-    micAnalyser = audioCtx.createAnalyser();
+    micCtx = micCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const micSource = micCtx.createMediaStreamSource(micStream);
+    micAnalyser = micCtx.createAnalyser();
     micAnalyser.fftSize = 1024;
     micData = new Uint8Array(micAnalyser.fftSize);
     micSource.connect(micAnalyser);
 
-    setupAudioGraph();
+    await setupRecordingBus();
     applyMicGain();
 
     micBtn.disabled = true;
     playBtn.disabled = false;
     recordBtn.disabled = false;
-    setStatus("Mic enabled. Load stems and start singing.");
+    setStatus("Mic enabled. Ready to sing.");
   } catch (err) {
-    setStatus("Mic access failed. Check browser permission settings.");
+    setStatus("Mic access failed. Check browser permissions.");
     console.error(err);
   }
+}
+
+function resetMeters() {
+  micMeter.style.width = "0%";
+  micValue.textContent = "0";
+  leadMeter.style.width = "0%";
+  leadValue.textContent = "0";
 }
 
 function loadSong(song) {
@@ -215,47 +211,24 @@ function loadSong(song) {
   leadAudio.load();
   backingAudio.load();
 
-  pauseBtn.disabled = true;
-  stopBtn.disabled = true;
-  playBtn.disabled = !micStream;
-  recordBtn.disabled = !micStream;
-
   sessionScore = 0;
   scoreMeter.style.width = "0%";
   scoreValue.textContent = "0";
+  resetMeters();
 
-  if (meterLoop) {
-    cancelAnimationFrame(meterLoop);
-    meterLoop = null;
-  }
-
-  if (micSource && !masterGain) {
-    setupAudioGraph();
-  }
+  playBtn.disabled = !micStream;
+  pauseBtn.disabled = true;
+  stopBtn.disabled = true;
+  recordBtn.disabled = !micStream;
 
   setStatus(`Loaded: ${song.title}`);
 }
 
 function play() {
-  if (!currentSong) {
-    setStatus("Pick a song first.");
-    return;
-  }
-
-  if (!masterGain) {
-    setStatus("Enable mic first.");
-    return;
-  }
-
-  if (audioCtx?.state === "suspended") {
-    audioCtx.resume();
-  }
-
+  if (!currentSong) return setStatus("Pick a song first.");
   Promise.all([leadAudio.play(), backingAudio.play()])
     .then(() => {
-      if (!meterLoop) {
-        tickMeters();
-      }
+      if (!meterLoop) tickMeters();
       isPaused = false;
       pauseBtn.textContent = "Pause";
       pauseBtn.disabled = false;
@@ -263,14 +236,13 @@ function play() {
       setStatus(`Playing: ${currentSong.title}`);
     })
     .catch((err) => {
-      setStatus("Playback failed. Try reloading the song.");
+      setStatus("Playback failed. Reload song and try again.");
       console.error(err);
     });
 }
 
 function pause() {
   if (!currentSong) return;
-
   if (!isPaused) {
     leadAudio.pause();
     backingAudio.pause();
@@ -291,56 +263,42 @@ function stop() {
   pauseBtn.textContent = "Pause";
   pauseBtn.disabled = true;
   stopBtn.disabled = true;
-
   if (meterLoop) {
     cancelAnimationFrame(meterLoop);
     meterLoop = null;
   }
-
-  micMeter.style.width = "0%";
-  micValue.textContent = "0";
-  leadMeter.style.width = "0%";
-  leadValue.textContent = "0";
-
+  resetMeters();
   setStatus("Stopped.");
 }
 
 function startRecording() {
-  if (!recordDestination) {
-    setStatus("Enable mic first before recording.");
-    return;
-  }
-
-  if (mediaRecorder && mediaRecorder.state === "recording") {
-    return;
-  }
+  if (!recDestination) return setStatus("Enable mic first before recording.");
+  if (typeof MediaRecorder === "undefined") return setStatus("Recording not supported in this browser.");
+  if (mediaRecorder?.state === "recording") return;
 
   recordedChunks = [];
   recordingBlob = null;
   replayBtn.disabled = true;
-  downloadBtn.disabled = true;
+  downloadWavBtn.disabled = true;
 
-  const options = MediaRecorder.isTypeSupported("audio/webm")
-    ? { mimeType: "audio/webm" }
-    : undefined;
+  const options = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+    ? { mimeType: "audio/webm;codecs=opus" }
+    : MediaRecorder.isTypeSupported("audio/webm")
+      ? { mimeType: "audio/webm" }
+      : undefined;
 
-  mediaRecorder = new MediaRecorder(recordDestination.stream, options);
-  mediaRecorder.ondataavailable = (event) => {
-    if (event.data && event.data.size > 0) {
-      recordedChunks.push(event.data);
-    }
+  mediaRecorder = new MediaRecorder(recDestination.stream, options);
+  mediaRecorder.ondataavailable = (e) => {
+    if (e.data?.size > 0) recordedChunks.push(e.data);
   };
-
   mediaRecorder.onstop = () => {
     const type = mediaRecorder.mimeType || "audio/webm";
     recordingBlob = new Blob(recordedChunks, { type });
-    if (recordingUrl) {
-      URL.revokeObjectURL(recordingUrl);
-    }
+    if (recordingUrl) URL.revokeObjectURL(recordingUrl);
     recordingUrl = URL.createObjectURL(recordingBlob);
     replayBtn.disabled = false;
-    downloadBtn.disabled = false;
-    setStatus("Recording complete. Replay or download your mix.");
+    downloadWavBtn.disabled = false;
+    setStatus("Recording complete. Replay or download WAV.");
   };
 
   mediaRecorder.start();
@@ -350,70 +308,105 @@ function startRecording() {
 }
 
 function stopRecording() {
-  if (!mediaRecorder || mediaRecorder.state !== "recording") {
-    return;
-  }
+  if (!mediaRecorder || mediaRecorder.state !== "recording") return;
   mediaRecorder.stop();
-  recordBtn.disabled = false;
   stopRecordBtn.disabled = true;
+  recordBtn.disabled = false;
 }
 
 function replayRecording() {
-  if (!recordingUrl) {
-    setStatus("No recording available yet.");
-    return;
-  }
-  const replayAudio = new Audio(recordingUrl);
-  replayAudio.play().catch((err) => {
+  if (!recordingUrl) return setStatus("No recording available yet.");
+  const audio = new Audio(recordingUrl);
+  audio.play().catch((err) => {
     setStatus("Replay failed.");
     console.error(err);
   });
 }
 
-function sanitizeForFilename(text) {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "side-chain";
-}
+function audioBufferToWavBlob(buffer) {
+  const channels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const length = buffer.length * channels * 2;
+  const wav = new ArrayBuffer(44 + length);
+  const view = new DataView(wav);
 
-function downloadRecording() {
-  if (!recordingBlob) {
-    setStatus("No recording available for download.");
-    return;
+  function writeString(offset, string) {
+    for (let i = 0; i < string.length; i += 1) view.setUint8(offset + i, string.charCodeAt(i));
   }
 
-  const songName = sanitizeForFilename(currentSong?.title || "side-chain-session");
-  const score = String(Math.round(sessionScore)).padStart(3, "0");
-  const filename = `${songName}_score-${score}.webm`;
+  writeString(0, "RIFF");
+  view.setUint32(4, 36 + length, true);
+  writeString(8, "WAVE");
+  writeString(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, channels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * channels * 2, true);
+  view.setUint16(32, channels * 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, "data");
+  view.setUint32(40, length, true);
 
-  const link = document.createElement("a");
-  link.href = recordingUrl;
-  link.download = filename;
-  link.click();
+  const interleaved = new Float32Array(buffer.length * channels);
+  for (let ch = 0; ch < channels; ch += 1) {
+    const channelData = buffer.getChannelData(ch);
+    for (let i = 0; i < buffer.length; i += 1) {
+      interleaved[i * channels + ch] = channelData[i];
+    }
+  }
 
-  setStatus(`Downloaded mix: ${filename}`);
+  let offset = 44;
+  for (let i = 0; i < interleaved.length; i += 1) {
+    const s = Math.max(-1, Math.min(1, interleaved[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    offset += 2;
+  }
+
+  return new Blob([wav], { type: "audio/wav" });
+}
+
+async function downloadWav() {
+  if (!recordingBlob) return setStatus("No recording available for download.");
+
+  try {
+    const arrayBuffer = await recordingBlob.arrayBuffer();
+    const decodeCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const audioBuffer = await decodeCtx.decodeAudioData(arrayBuffer.slice(0));
+    const wavBlob = audioBufferToWavBlob(audioBuffer);
+
+    const songName = sanitizeForFilename(currentSong?.title || "side-chain-session");
+    const score = String(Math.round(sessionScore)).padStart(3, "0");
+    const filename = `${songName}_score-${score}.wav`;
+
+    const url = URL.createObjectURL(wavBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    setStatus(`Downloaded WAV: ${filename}. MP3 export needs external encoder/backend.`);
+  } catch (err) {
+    console.error(err);
+    setStatus("WAV conversion failed in this browser. Try Chrome/Edge.");
+  }
 }
 
 function loadCustomFiles() {
   const leadFile = leadUpload.files?.[0];
   const instFile = instUpload.files?.[0];
-
-  if (!leadFile || !instFile) {
-    setStatus("Choose both lead and instrument files.");
-    return;
-  }
-
-  const customSong = {
+  if (!leadFile || !instFile) return setStatus("Choose both lead and instrument files.");
+  loadSong({
     title: `Custom: ${leadFile.name}`,
     lead: URL.createObjectURL(leadFile),
     instrumental: URL.createObjectURL(instFile),
-  };
-
-  loadSong(customSong);
+  });
 }
 
 function adminLogin() {
   const email = window.prompt("Admin email (prototype check)");
   if (!email) return;
-
   if (ADMIN_ALLOWLIST.includes(email.trim().toLowerCase())) {
     adminAuthed = true;
     adminState.textContent = `Signed in as ${email}`;
@@ -428,20 +421,11 @@ function adminLogin() {
 }
 
 function addLibrarySong() {
-  if (!adminAuthed) {
-    setStatus("Admin login required.");
-    return;
-  }
-
+  if (!adminAuthed) return setStatus("Admin login required.");
   const title = adminTitle.value.trim();
   const lead = adminLeadPath.value.trim();
   const instrumental = adminInstPath.value.trim();
-
-  if (!title || !lead || !instrumental) {
-    setStatus("Fill in title, lead path, and instrumental path.");
-    return;
-  }
-
+  if (!title || !lead || !instrumental) return setStatus("Fill in title, lead path, and instrumental path.");
   builtInSongs.push({ title, lead, instrumental });
   hydrateSongMenu();
   songSelect.value = String(builtInSongs.length - 1);
@@ -449,11 +433,7 @@ function addLibrarySong() {
 }
 
 function exportLibrary() {
-  if (!adminAuthed) {
-    setStatus("Admin login required.");
-    return;
-  }
-
+  if (!adminAuthed) return setStatus("Admin login required.");
   const blob = new Blob([JSON.stringify(builtInSongs, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -464,10 +444,7 @@ function exportLibrary() {
   setStatus("Exported library JSON. Commit this file to GitHub to publish changes.");
 }
 
-loadSongBtn.addEventListener("click", () => {
-  const idx = Number(songSelect.value);
-  loadSong(builtInSongs[idx]);
-});
+loadSongBtn.addEventListener("click", () => loadSong(builtInSongs[Number(songSelect.value)]));
 loadCustomBtn.addEventListener("click", loadCustomFiles);
 micBtn.addEventListener("click", enableMic);
 playBtn.addEventListener("click", play);
@@ -476,7 +453,7 @@ stopBtn.addEventListener("click", stop);
 recordBtn.addEventListener("click", startRecording);
 stopRecordBtn.addEventListener("click", stopRecording);
 replayBtn.addEventListener("click", replayRecording);
-downloadBtn.addEventListener("click", downloadRecording);
+downloadWavBtn.addEventListener("click", downloadWav);
 recordGain.addEventListener("input", applyMicGain);
 adminLoginBtn.addEventListener("click", adminLogin);
 addLibraryBtn.addEventListener("click", addLibrarySong);

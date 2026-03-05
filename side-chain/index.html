@@ -12,7 +12,7 @@
       <img class="logo" src="../sidechain-logo-color.png" alt="Side-Chain logo" />
       <p class="eyebrow">Torus Media Prototype</p>
       <h1>Side-Chain</h1>
-      <p class="subtitle">A streamlined spin-off focused on adaptive vocal blending, score feedback, recording tools, and reusable track management.</p>
+      <p class="subtitle">Adaptive vocal blending with reliable playback, mic gain, recording, replay, and WAV export.</p>
     </header>
 
     <section class="card controls-grid">
@@ -62,8 +62,8 @@
         <div class="gain-readout"><span id="recordGainValue">+0 dB</span></div>
         <button id="recordBtn" disabled>Start Record</button>
         <button id="stopRecordBtn" disabled>Stop Record</button>
-        <button id="replayBtn" disabled>Replay Recording</button>
-        <button id="downloadBtn" disabled>Download Mix</button>
+        <button id="replayBtn" disabled>Replay</button>
+        <button id="downloadWavBtn" disabled>Download WAV</button>
       </div>
 
       <div class="meter-area">
@@ -86,7 +86,7 @@
 
     <section class="card admin-card">
       <h2>Admin Song Manager (Prototype)</h2>
-      <p class="small">For now, this is a client-side workflow: approved email can add song metadata to a JSON export you can commit to GitHub. A secure GitHub/Google-backed pipeline would require a backend service.</p>
+      <p class="small">Google-only secure admin + direct GitHub writes requires a backend service. This prototype exports metadata JSON for manual commit.</p>
 
       <div class="row wrap">
         <button id="adminLoginBtn">Admin Login</button>
