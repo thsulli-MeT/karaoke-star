@@ -30,6 +30,7 @@ const leadMeter = document.getElementById("leadMeter");
 const leadValue = document.getElementById("leadValue");
 const scoreMeter = document.getElementById("scoreMeter");
 const scoreValue = document.getElementById("scoreValue");
+const scoreDigits = document.getElementById("scoreDigits");
 const statusEl = document.getElementById("status");
 
 const adminLoginBtn = document.getElementById("adminLoginBtn");
@@ -103,9 +104,18 @@ function getMicLevel() {
 }
 
 function computeLeadVolume(mode, micLevel) {
-  if (mode === "ghost") return 0;
-  if (mode === "assist") return 0.5;
-  return Math.max(0, 1 - micLevel * 1.35);
+  const modeBase = {
+    practice: 1.0,
+    light: 0.8,
+    medium: 0.6,
+    ghost: 0.2,
+    solo: 0.0,
+  };
+  const base = modeBase[mode] ?? 1.0;
+  if (mode === "practice" || mode === "solo") {
+    return base;
+  }
+  return Math.max(0, base - micLevel * 0.5);
 }
 
 function updateRecordingMixGains() {
@@ -136,6 +146,7 @@ function tickMeters() {
   const scorePct = Math.min(100, Math.round(score / 10));
   scoreMeter.style.width = `${scorePct}%`;
   scoreValue.textContent = String(score);
+  scoreDigits.textContent = String(score).padStart(6, "0");
 
   meterLoop = requestAnimationFrame(tickMeters);
 }
@@ -214,6 +225,7 @@ function loadSong(song) {
   sessionScore = 0;
   scoreMeter.style.width = "0%";
   scoreValue.textContent = "0";
+  scoreDigits.textContent = "000000";
   resetMeters();
 
   playBtn.disabled = !micStream;
@@ -460,5 +472,6 @@ addLibraryBtn.addEventListener("click", addLibrarySong);
 exportLibraryBtn.addEventListener("click", exportLibrary);
 
 applyMicGain();
+scoreDigits.textContent = "000000";
 hydrateSongMenu();
 loadSong(builtInSongs[0]);

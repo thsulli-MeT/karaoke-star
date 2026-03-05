@@ -147,6 +147,6 @@ A standalone prototype has been added under `side-chain/` to keep Karaoke Star i
 Included in this spin-off:
 - built-in sample song menu
 - custom lead/instrument stem upload
-- adaptive Assist/Share/Ghost blend controls
+- adaptive lead-guide levels (Practice Round, Light Guide, Medium Drop, Ghost Mode, Solo Star)
 - simple admin prototype for extending the library and exporting JSON metadata
 - in-app recording, replay, mic gain (+/- dB), and downloadable WAV mix files named with song + score

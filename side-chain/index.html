@@ -8,12 +8,22 @@
 </head>
 <body>
   <main class="app">
-    <header>
-      <img class="logo" src="../sidechain-logo-color.png" alt="Side-Chain logo" />
-      <p class="eyebrow">Torus Media Prototype</p>
-      <h1>Side-Chain</h1>
-      <p class="subtitle">Adaptive vocal blending with reliable playback, mic gain, recording, replay, and WAV export.</p>
+    <header class="top-header">
+      <div>
+        <img class="logo" src="../sidechain-logo-color.png" alt="Side-Chain logo" />
+        <p class="eyebrow">Torus Media Prototype</p>
+        <h1>Side-Chain</h1>
+        <p class="subtitle">Adaptive vocal blending with reliable playback, mic gain, recording, replay, and WAV export.</p>
+      </div>
+      <div class="scoreboard-panel">
+        <p class="scoreboard-label">Session Score</p>
+        <div id="scoreDigits" class="scoreboard-digits">000000</div>
+      </div>
     </header>
+
+    <section class="pro-tips card">
+      <strong>Pro Tips:</strong> Use headphones • Use a quality microphone • Get close to the mic
+    </section>
 
     <section class="card controls-grid">
       <div>
@@ -39,17 +49,35 @@
 
     <section class="card">
       <h2>Performance Engine</h2>
-      <div class="row wrap">
+
+      <div class="meter-area">
+        <div>
+          <p>Session Score Intensity: <span id="scoreValue">0</span></p>
+          <div class="meter"><div id="scoreMeter" class="fill gold"></div></div>
+        </div>
+        <div>
+          <p>Mic Presence: <span id="micValue">0</span>%</p>
+          <div class="meter"><div id="micMeter" class="fill"></div></div>
+        </div>
+        <div>
+          <p>Lead Vocal Level: <span id="leadValue">0</span>%</p>
+          <div class="meter"><div id="leadMeter" class="fill blue"></div></div>
+        </div>
+      </div>
+
+      <div class="row wrap controls-row">
         <button id="micBtn">Enable Mic</button>
         <button id="playBtn" disabled>Play</button>
         <button id="pauseBtn" disabled>Pause</button>
         <button id="stopBtn" disabled>Stop</button>
         <label>
-          Mode
+          Lead Guide Level
           <select id="modeSelect">
-            <option value="assist">Assist</option>
-            <option value="share" selected>Share</option>
-            <option value="ghost">Ghost</option>
+            <option value="practice" selected>Practice Round: 100%</option>
+            <option value="light">Light Guide: -20%</option>
+            <option value="medium">Medium Drop: -40%</option>
+            <option value="ghost">Ghost Mode: -80%</option>
+            <option value="solo">Solo Star: -100%</option>
           </select>
         </label>
       </div>
@@ -64,21 +92,6 @@
         <button id="stopRecordBtn" disabled>Stop Record</button>
         <button id="replayBtn" disabled>Replay</button>
         <button id="downloadWavBtn" disabled>Download WAV</button>
-      </div>
-
-      <div class="meter-area">
-        <div>
-          <p>Mic Presence: <span id="micValue">0</span>%</p>
-          <div class="meter"><div id="micMeter" class="fill"></div></div>
-        </div>
-        <div>
-          <p>Lead Vocal Level: <span id="leadValue">0</span>%</p>
-          <div class="meter"><div id="leadMeter" class="fill blue"></div></div>
-        </div>
-        <div>
-          <p>Session Score: <span id="scoreValue">0</span></p>
-          <div class="meter"><div id="scoreMeter" class="fill gold"></div></div>
-        </div>
       </div>
 
       <p id="status">Load a demo song or upload stems to begin.</p>
