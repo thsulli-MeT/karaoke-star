@@ -139,3 +139,37 @@ For inquiries, collaboration, or early pilot discussions:
 **Contact — Torus Media**
 
 shortmusicvideos.com
+
+## Side-Chain Spin-Off Prototype
+
+A standalone prototype has been added under `side-chain/` to keep Karaoke Star intact while testing a licensing-friendly Side-Chain app variant.
+
+Included in this spin-off:
+- built-in sample song menu
+- custom lead/instrument stem upload
+- server-validated access gateway (Patreon L2 + promo code paths) with signed session cookies
+- adaptive lead-guide levels (Practice Round, Light Guide, Medium Drop, Ghost Mode, Solo Star)
+- in-app recording, replay, mic gain (+/- dB), EQ + auto-tune assist controls, and downloadable WAV mix files named with song + score
+- customizable visual themes with 4 animated background presets plus custom background upload
+
+
+### Side-Chain Access Gateway (Option 2 security)
+
+Run the secure gate + static app server:
+
+```bash
+node side-chain/access-gateway.js
+```
+
+Then open: `http://localhost:4173/side-chain/index.html`
+
+To use your own codes, create `side-chain/access-codes.json` (see `side-chain/access-codes.example.json`) and optionally set:
+
+```bash
+ACCESS_CODES_JSON=side-chain/access-codes.json SESSION_SECRET="strong-random-secret" node side-chain/access-gateway.js
+```
+
+
+Troubleshooting:
+- If you see `Server unavailable. Start: node side-chain/access-gateway.js`, run the gateway command from repo root.
+- For local fallback only (insecure), click **Use Local Demo Mode** and use demo codes `L2-DEMO-2026` or `PROMO-GUEST-2026`.
