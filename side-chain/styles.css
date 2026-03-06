@@ -1,7 +1,6 @@
 :root {
   color-scheme: dark;
-  --bg: #080b16;
-  --card: #161b2e;
+  --card: rgba(22, 27, 46, 0.92);
   --text: #f4f7ff;
   --muted: #9cabd2;
 }
@@ -10,19 +9,83 @@ body {
   margin: 0;
   font-family: Inter, system-ui, -apple-system, sans-serif;
   color: var(--text);
-  background: radial-gradient(circle at top, #16244f 0%, var(--bg) 50%);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 100vh;
+  animation-duration: 16s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
 }
-.app { max-width: 1080px; margin: 0 auto; padding: 20px; }
+
+/* Preset backgrounds */
+body.bg-electric-grid {
+  background-image:
+    linear-gradient(rgba(0, 255, 255, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.15) 1px, transparent 1px),
+    radial-gradient(circle at 30% 20%, #233d8f 0%, #090b16 55%);
+  background-size: 48px 48px, 48px 48px, cover;
+  animation-name: pulseGrid;
+}
+@keyframes pulseGrid {
+  0% { filter: hue-rotate(0deg); }
+  50% { filter: hue-rotate(20deg); }
+  100% { filter: hue-rotate(0deg); }
+}
+
+body.bg-rain-fern {
+  background-image:
+    repeating-linear-gradient(175deg, rgba(173, 216, 230, 0.22) 0 2px, transparent 2px 16px),
+    radial-gradient(circle at 70% 80%, rgba(39, 99, 66, 0.75), rgba(6, 14, 18, 0.95) 60%);
+  background-size: 240px 240px, cover;
+  animation-name: rainSlide;
+}
+@keyframes rainSlide {
+  from { background-position: 0 0, center; }
+  to { background-position: -140px 420px, center; }
+}
+
+body.bg-starfield {
+  background-image:
+    radial-gradient(2px 2px at 20% 30%, #fff, transparent 60%),
+    radial-gradient(2px 2px at 80% 40%, #fff, transparent 60%),
+    radial-gradient(2px 2px at 55% 70%, #fff, transparent 60%),
+    radial-gradient(circle at 85% 20%, rgba(126, 88, 255, 0.35), transparent 28%),
+    radial-gradient(circle at 15% 80%, rgba(61, 171, 255, 0.3), transparent 30%),
+    #05060d;
+  background-size: 220px 220px, 260px 260px, 300px 300px, cover, cover, cover;
+  animation-name: starDrift;
+}
+@keyframes starDrift {
+  from { background-position: 0 0, 0 0, 0 0, center, center, center; }
+  to { background-position: 0 420px, 0 300px, 0 520px, center, center, center; }
+}
+
+body.bg-light-phenomena {
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(0, 255, 214, 0.30), transparent 30%),
+    radial-gradient(circle at 80% 30%, rgba(130, 115, 255, 0.26), transparent 35%),
+    radial-gradient(circle at 50% 80%, rgba(255, 112, 160, 0.22), transparent 30%),
+    #070915;
+  animation-name: auroraShift;
+}
+@keyframes auroraShift {
+  0% { filter: hue-rotate(0deg); }
+  50% { filter: hue-rotate(-28deg); }
+  100% { filter: hue-rotate(0deg); }
+}
+
+.app { max-width: 1120px; margin: 0 auto; padding: 20px; }
 .top-header {
-  display: flex;
-  gap: 16px;
-  justify-content: space-between;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20px;
+  align-items: center;
 }
-.logo { width: 200px; max-width: 70%; display: block; margin-bottom: 12px; }
-h1 { margin: 0; font-size: 2.2rem; }
-.eyebrow { color: #9bc0ff; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
-.subtitle { color: var(--muted); max-width: 70ch; }
+.logo { width: 200px; max-width: 100%; display: block; }
+.title-wrap { text-align: center; }
+h1 { margin: 0; font-size: 2.4rem; letter-spacing: .04em; }
+.subtitle { color: #dce6ff; margin-top: 6px; font-weight: 600; }
 .scoreboard-panel {
   min-width: 290px;
   background: #0b1129;
@@ -47,17 +110,15 @@ h1 { margin: 0; font-size: 2.2rem; }
   text-shadow: 0 0 10px rgba(255, 83, 61, .35);
 }
 .card {
-  background: linear-gradient(180deg, #1b2140 0%, var(--card) 100%);
+  background: var(--card);
+  backdrop-filter: blur(3px);
   border: 1px solid #2d355c;
   border-radius: 14px;
   padding: 18px;
   margin-top: 16px;
 }
-.pro-tips {
-  font-size: 1rem;
-  color: #d8e6ff;
-  border-color: #3557bd;
-}
+.sub-card { margin-top: 12px; background: rgba(12, 17, 33, 0.9); }
+.pro-tips { font-size: 1rem; color: #d8e6ff; border-color: #3557bd; }
 .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
 label { display: block; font-size: .95rem; color: var(--muted); margin: 10px 0; }
 input, select, button {
@@ -94,14 +155,15 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .fill.gold { background: linear-gradient(90deg, #e7ba34, #ffe08a); }
 #status { color: #d8e4ff; background: #101634; border: 1px solid #2f407d; border-radius: 10px; padding: 10px; margin-top: 14px; }
 .small { color: var(--muted); font-size: .9rem; }
-#adminState { align-self: center; color: #b8c9f7; }
-@media (max-width: 800px) {
-  .top-header { flex-direction: column; }
+
+@media (max-width: 900px) {
+  .top-header { grid-template-columns: 1fr; text-align: center; }
+  .logo { margin: 0 auto; }
   .scoreboard-panel { width: 100%; min-width: 0; }
 }
 @media (max-width: 640px) {
   .app { padding: 14px; }
-  h1 { font-size: 1.7rem; }
+  h1 { font-size: 1.8rem; }
   .logo { width: 150px; }
   .gain-readout { margin-top: 6px; }
   .scoreboard-digits { font-size: 2rem; }

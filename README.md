@@ -148,5 +148,5 @@ Included in this spin-off:
 - built-in sample song menu
 - custom lead/instrument stem upload
 - adaptive lead-guide levels (Practice Round, Light Guide, Medium Drop, Ghost Mode, Solo Star)
-- simple admin prototype for extending the library and exporting JSON metadata
-- in-app recording, replay, mic gain (+/- dB), and downloadable WAV mix files named with song + score
+- in-app recording, replay, mic gain (+/- dB), EQ + auto-tune assist controls, and downloadable WAV mix files named with song + score
+- customizable visual themes with 4 animated background presets plus custom background upload

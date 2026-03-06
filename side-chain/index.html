@@ -6,15 +6,16 @@
   <title>Side-Chain | Vocal Blend Demo</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body class="bg-electric-grid">
   <main class="app">
     <header class="top-header">
-      <div>
-        <img class="logo" src="../sidechain-logo-color.png" alt="Side-Chain logo" />
-        <p class="eyebrow">Torus Media Prototype</p>
+      <img class="logo" src="../sidechain-logo-color.png" alt="Side-Chain logo" />
+
+      <div class="title-wrap">
         <h1>Side-Chain</h1>
-        <p class="subtitle">Adaptive vocal blending with reliable playback, mic gain, recording, replay, and WAV export.</p>
+        <p class="subtitle">A Torus Media Project</p>
       </div>
+
       <div class="scoreboard-panel">
         <p class="scoreboard-label">Session Score</p>
         <div id="scoreDigits" class="scoreboard-digits">000000</div>
@@ -44,6 +45,28 @@
         <div class="row">
           <button id="loadCustomBtn">Use Uploaded Files</button>
         </div>
+      </div>
+    </section>
+
+    <section class="card controls-grid">
+      <div>
+        <h2>Visual Theme</h2>
+        <label>
+          Background presets
+          <select id="bgPresetSelect">
+            <option value="bg-electric-grid">Electrified Grid</option>
+            <option value="bg-rain-fern">Rain + Fern Window</option>
+            <option value="bg-starfield">Starfield Drive</option>
+            <option value="bg-light-phenomena">Light Phenomena</option>
+          </select>
+        </label>
+        <button id="applyBgBtn">Apply Background</button>
+      </div>
+
+      <div>
+        <h2>Upload Your Own Background</h2>
+        <label>Image / GIF<input id="bgUpload" type="file" accept="image/*" /></label>
+        <button id="applyCustomBgBtn">Use Custom Background</button>
       </div>
     </section>
 
@@ -82,6 +105,17 @@
         </label>
       </div>
 
+      <div class="card sub-card">
+        <h3>Microphone EQ + Auto Tune Assist</h3>
+        <div class="row wrap">
+          <label>Bass (Low) dB<input id="eqLow" type="range" min="-12" max="12" step="1" value="0" /></label>
+          <label>Mid dB<input id="eqMid" type="range" min="-12" max="12" step="1" value="0" /></label>
+          <label>Treble (High) dB<input id="eqHigh" type="range" min="-12" max="12" step="1" value="0" /></label>
+          <label>Auto Tune Assist<input id="autoTune" type="range" min="0" max="100" step="1" value="0" /></label>
+        </div>
+        <p class="small" id="eqReadout">Low 0 dB • Mid 0 dB • High 0 dB • Auto Tune Assist 0%</p>
+      </div>
+
       <div class="row wrap record-controls">
         <label>
           Mic / Record Gain (dB)
@@ -95,26 +129,6 @@
       </div>
 
       <p id="status">Load a demo song or upload stems to begin.</p>
-    </section>
-
-    <section class="card admin-card">
-      <h2>Admin Song Manager (Prototype)</h2>
-      <p class="small">Google-only secure admin + direct GitHub writes requires a backend service. This prototype exports metadata JSON for manual commit.</p>
-
-      <div class="row wrap">
-        <button id="adminLoginBtn">Admin Login</button>
-        <span id="adminState">Not signed in</span>
-      </div>
-
-      <div class="admin-form" id="adminForm" hidden>
-        <label>Song title<input id="adminTitle" type="text" placeholder="My New Track" /></label>
-        <label>Lead stem path or URL<input id="adminLeadPath" type="text" placeholder="songs/my-new-track/0 Lead Vocals.mp3" /></label>
-        <label>Instrument stem path or URL<input id="adminInstPath" type="text" placeholder="songs/my-new-track/1 Instrumental.mp3" /></label>
-        <div class="row wrap">
-          <button id="addLibraryBtn">Add to In-App Library</button>
-          <button id="exportLibraryBtn">Export Library JSON</button>
-        </div>
-      </div>
     </section>
   </main>
 

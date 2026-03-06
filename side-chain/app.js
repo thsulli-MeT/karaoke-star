@@ -3,19 +3,28 @@ const builtInSongs = [
   { title: "Pour It Out - Sample", lead: "../pour-it-out/0 Lead Vocals_01.mp3", instrumental: "../pour-it-out/1 Instrumental_01.mp3" },
 ];
 
-const ADMIN_ALLOWLIST = ["you@example.com"];
-
 const songSelect = document.getElementById("songSelect");
 const loadSongBtn = document.getElementById("loadSongBtn");
 const leadUpload = document.getElementById("leadUpload");
 const instUpload = document.getElementById("instUpload");
 const loadCustomBtn = document.getElementById("loadCustomBtn");
 
+const bgPresetSelect = document.getElementById("bgPresetSelect");
+const applyBgBtn = document.getElementById("applyBgBtn");
+const bgUpload = document.getElementById("bgUpload");
+const applyCustomBgBtn = document.getElementById("applyCustomBgBtn");
+
 const micBtn = document.getElementById("micBtn");
 const playBtn = document.getElementById("playBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const stopBtn = document.getElementById("stopBtn");
 const modeSelect = document.getElementById("modeSelect");
+
+const eqLow = document.getElementById("eqLow");
+const eqMid = document.getElementById("eqMid");
+const eqHigh = document.getElementById("eqHigh");
+const autoTune = document.getElementById("autoTune");
+const eqReadout = document.getElementById("eqReadout");
 
 const recordGain = document.getElementById("recordGain");
 const recordGainValue = document.getElementById("recordGainValue");
@@ -33,15 +42,6 @@ const scoreValue = document.getElementById("scoreValue");
 const scoreDigits = document.getElementById("scoreDigits");
 const statusEl = document.getElementById("status");
 
-const adminLoginBtn = document.getElementById("adminLoginBtn");
-const adminState = document.getElementById("adminState");
-const adminForm = document.getElementById("adminForm");
-const adminTitle = document.getElementById("adminTitle");
-const adminLeadPath = document.getElementById("adminLeadPath");
-const adminInstPath = document.getElementById("adminInstPath");
-const addLibraryBtn = document.getElementById("addLibraryBtn");
-const exportLibraryBtn = document.getElementById("exportLibraryBtn");
-
 const backingAudio = new Audio();
 const leadAudio = new Audio();
 backingAudio.crossOrigin = "anonymous";
@@ -57,21 +57,23 @@ let meterLoop;
 let currentSong;
 let sessionScore = 0;
 let isPaused = false;
-let adminAuthed = false;
 
 let recCtx;
 let recDestination;
 let recMicGain;
 let recLeadGain;
 let recInstGain;
-let recLeadSource;
-let recInstSource;
-let recMicSource;
+let recMicLow;
+let recMicMid;
+let recMicHigh;
+let recMicComp;
+let recMicShape;
 
 let mediaRecorder;
 let recordedChunks = [];
 let recordingBlob = null;
 let recordingUrl = "";
+let customBgUrl = "";
 
 function setStatus(msg) { statusEl.textContent = msg; }
 function formatDb(v) { return `${Number(v) >= 0 ? "+" : ""}${Number(v)} dB`; }
@@ -104,25 +106,69 @@ function getMicLevel() {
 }
 
 function computeLeadVolume(mode, micLevel) {
-  const modeBase = {
-    practice: 1.0,
-    light: 0.8,
-    medium: 0.6,
-    ghost: 0.2,
-    solo: 0.0,
-  };
+  const modeBase = { practice: 1.0, light: 0.8, medium: 0.6, ghost: 0.2, solo: 0.0 };
   const base = modeBase[mode] ?? 1.0;
-  if (mode === "practice" || mode === "solo") {
-    return base;
-  }
+  if (mode === "practice" || mode === "solo") return base;
   return Math.max(0, base - micLevel * 0.5);
+}
+
+function makeDriveCurve(amount = 0) {
+  const n = 1024;
+  const curve = new Float32Array(n);
+  const k = 1 + (amount / 100) * 20;
+  for (let i = 0; i < n; i += 1) {
+    const x = (i * 2) / n - 1;
+    curve[i] = ((1 + k) * x) / (1 + k * Math.abs(x));
+  }
+  return curve;
+}
+
+function updateMicToneChain() {
+  if (!recMicLow) return;
+
+  recMicLow.gain.value = Number(eqLow.value);
+  recMicMid.gain.value = Number(eqMid.value);
+  recMicHigh.gain.value = Number(eqHigh.value);
+
+  const tuneAmt = Number(autoTune.value);
+  recMicComp.threshold.value = -30 - tuneAmt * 0.2;
+  recMicComp.ratio.value = 2 + tuneAmt * 0.1;
+  recMicComp.attack.value = 0.003 + (100 - tuneAmt) * 0.0002;
+  recMicComp.release.value = 0.08 + tuneAmt * 0.003;
+  recMicShape.curve = makeDriveCurve(tuneAmt);
+
+  eqReadout.textContent = `Low ${eqLow.value} dB • Mid ${eqMid.value} dB • High ${eqHigh.value} dB • Auto Tune Assist ${autoTune.value}%`;
+}
+
+function applyBgPreset() {
+  const klass = bgPresetSelect.value;
+  document.body.className = klass;
+  if (customBgUrl) {
+    URL.revokeObjectURL(customBgUrl);
+    customBgUrl = "";
+  }
+}
+
+function applyCustomBackground() {
+  const file = bgUpload.files?.[0];
+  if (!file) {
+    setStatus("Choose an image or GIF for custom background.");
+    return;
+  }
+
+  if (customBgUrl) URL.revokeObjectURL(customBgUrl);
+  customBgUrl = URL.createObjectURL(file);
+  document.body.className = "";
+  document.body.style.backgroundImage = `linear-gradient(rgba(6, 8, 14, 0.45), rgba(6, 8, 14, 0.45)), url('${customBgUrl}')`;
+  document.body.style.backgroundSize = "cover";
+  document.body.style.backgroundPosition = "center";
+  setStatus(`Applied custom background: ${file.name}`);
 }
 
 function updateRecordingMixGains() {
   if (!recLeadGain || !recMicGain) return;
   const micLevel = getMicLevel();
-  const leadLevel = computeLeadVolume(modeSelect.value, micLevel);
-  recLeadGain.gain.value = leadLevel;
+  recLeadGain.gain.value = computeLeadVolume(modeSelect.value, micLevel);
   recMicGain.gain.value = dbToGain(Number(recordGain.value));
 }
 
@@ -153,14 +199,11 @@ function tickMeters() {
 
 function applyMicGain() {
   recordGainValue.textContent = formatDb(recordGain.value);
-  if (recMicGain) {
-    recMicGain.gain.value = dbToGain(Number(recordGain.value));
-  }
+  if (recMicGain) recMicGain.gain.value = dbToGain(Number(recordGain.value));
 }
 
 async function setupRecordingBus() {
-  if (!micStream) return;
-  if (recDestination) return;
+  if (!micStream || recDestination) return;
 
   recCtx = new (window.AudioContext || window.webkitAudioContext)();
   recDestination = recCtx.createMediaStreamDestination();
@@ -168,13 +211,29 @@ async function setupRecordingBus() {
   const leadStream = leadAudio.captureStream();
   const instStream = backingAudio.captureStream();
 
-  recLeadSource = recCtx.createMediaStreamSource(leadStream);
-  recInstSource = recCtx.createMediaStreamSource(instStream);
-  recMicSource = recCtx.createMediaStreamSource(micStream);
+  const recLeadSource = recCtx.createMediaStreamSource(leadStream);
+  const recInstSource = recCtx.createMediaStreamSource(instStream);
+  const recMicSource = recCtx.createMediaStreamSource(micStream);
 
   recLeadGain = recCtx.createGain();
   recInstGain = recCtx.createGain();
   recMicGain = recCtx.createGain();
+
+  recMicLow = recCtx.createBiquadFilter();
+  recMicLow.type = "lowshelf";
+  recMicLow.frequency.value = 180;
+
+  recMicMid = recCtx.createBiquadFilter();
+  recMicMid.type = "peaking";
+  recMicMid.frequency.value = 1800;
+  recMicMid.Q.value = 1.0;
+
+  recMicHigh = recCtx.createBiquadFilter();
+  recMicHigh.type = "highshelf";
+  recMicHigh.frequency.value = 5200;
+
+  recMicComp = recCtx.createDynamicsCompressor();
+  recMicShape = recCtx.createWaveShaper();
 
   recInstGain.gain.value = 1;
   recLeadGain.gain.value = 1;
@@ -182,7 +241,17 @@ async function setupRecordingBus() {
 
   recLeadSource.connect(recLeadGain).connect(recDestination);
   recInstSource.connect(recInstGain).connect(recDestination);
-  recMicSource.connect(recMicGain).connect(recDestination);
+
+  recMicSource
+    .connect(recMicLow)
+    .connect(recMicMid)
+    .connect(recMicHigh)
+    .connect(recMicComp)
+    .connect(recMicShape)
+    .connect(recMicGain)
+    .connect(recDestination);
+
+  updateMicToneChain();
 }
 
 async function enableMic() {
@@ -363,9 +432,7 @@ function audioBufferToWavBlob(buffer) {
   const interleaved = new Float32Array(buffer.length * channels);
   for (let ch = 0; ch < channels; ch += 1) {
     const channelData = buffer.getChannelData(ch);
-    for (let i = 0; i < buffer.length; i += 1) {
-      interleaved[i * channels + ch] = channelData[i];
-    }
+    for (let i = 0; i < buffer.length; i += 1) interleaved[i * channels + ch] = channelData[i];
   }
 
   let offset = 44;
@@ -398,7 +465,7 @@ async function downloadWav() {
     a.click();
     URL.revokeObjectURL(url);
 
-    setStatus(`Downloaded WAV: ${filename}. MP3 export needs external encoder/backend.`);
+    setStatus(`Downloaded WAV: ${filename}`);
   } catch (err) {
     console.error(err);
     setStatus("WAV conversion failed in this browser. Try Chrome/Edge.");
@@ -416,48 +483,10 @@ function loadCustomFiles() {
   });
 }
 
-function adminLogin() {
-  const email = window.prompt("Admin email (prototype check)");
-  if (!email) return;
-  if (ADMIN_ALLOWLIST.includes(email.trim().toLowerCase())) {
-    adminAuthed = true;
-    adminState.textContent = `Signed in as ${email}`;
-    adminForm.hidden = false;
-    setStatus("Admin mode enabled.");
-  } else {
-    adminAuthed = false;
-    adminState.textContent = "Not signed in";
-    adminForm.hidden = true;
-    setStatus("Admin access denied.");
-  }
-}
-
-function addLibrarySong() {
-  if (!adminAuthed) return setStatus("Admin login required.");
-  const title = adminTitle.value.trim();
-  const lead = adminLeadPath.value.trim();
-  const instrumental = adminInstPath.value.trim();
-  if (!title || !lead || !instrumental) return setStatus("Fill in title, lead path, and instrumental path.");
-  builtInSongs.push({ title, lead, instrumental });
-  hydrateSongMenu();
-  songSelect.value = String(builtInSongs.length - 1);
-  setStatus(`Added '${title}' to in-app library (not yet committed to repo).`);
-}
-
-function exportLibrary() {
-  if (!adminAuthed) return setStatus("Admin login required.");
-  const blob = new Blob([JSON.stringify(builtInSongs, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "side-chain-library.json";
-  a.click();
-  URL.revokeObjectURL(url);
-  setStatus("Exported library JSON. Commit this file to GitHub to publish changes.");
-}
-
 loadSongBtn.addEventListener("click", () => loadSong(builtInSongs[Number(songSelect.value)]));
 loadCustomBtn.addEventListener("click", loadCustomFiles);
+applyBgBtn.addEventListener("click", applyBgPreset);
+applyCustomBgBtn.addEventListener("click", applyCustomBackground);
 micBtn.addEventListener("click", enableMic);
 playBtn.addEventListener("click", play);
 pauseBtn.addEventListener("click", pause);
@@ -467,11 +496,13 @@ stopRecordBtn.addEventListener("click", stopRecording);
 replayBtn.addEventListener("click", replayRecording);
 downloadWavBtn.addEventListener("click", downloadWav);
 recordGain.addEventListener("input", applyMicGain);
-adminLoginBtn.addEventListener("click", adminLogin);
-addLibraryBtn.addEventListener("click", addLibrarySong);
-exportLibraryBtn.addEventListener("click", exportLibrary);
+eqLow.addEventListener("input", updateMicToneChain);
+eqMid.addEventListener("input", updateMicToneChain);
+eqHigh.addEventListener("input", updateMicToneChain);
+autoTune.addEventListener("input", updateMicToneChain);
 
 applyMicGain();
+updateMicToneChain();
 scoreDigits.textContent = "000000";
 hydrateSongMenu();
 loadSong(builtInSongs[0]);
