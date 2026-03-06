@@ -196,6 +196,17 @@ input, select, button {
   width: 100%;
 }
 button { cursor: pointer; background: #385ddf; border: none; font-weight: 600; }
+.gate-help code {
+  color: #9fd6ff;
+  background: rgba(16, 20, 42, 0.85);
+  border: 1px solid #33518d;
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+button.secondary {
+  background: #273058;
+  border: 1px solid #4a61aa;
+}
 button:disabled { opacity: .5; cursor: not-allowed; }
 .row { display: flex; gap: 10px; margin-top: 8px; }
 .row > * { flex: 1; }

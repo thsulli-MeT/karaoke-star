@@ -168,3 +168,8 @@ To use your own codes, create `side-chain/access-codes.json` (see `side-chain/ac
 ```bash
 ACCESS_CODES_JSON=side-chain/access-codes.json SESSION_SECRET="strong-random-secret" node side-chain/access-gateway.js
 ```
+
+
+Troubleshooting:
+- If you see `Server unavailable. Start: node side-chain/access-gateway.js`, run the gateway command from repo root.
+- For local fallback only (insecure), click **Use Local Demo Mode** and use demo codes `L2-DEMO-2026` or `PROMO-GUEST-2026`.

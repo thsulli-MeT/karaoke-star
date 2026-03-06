@@ -8,6 +8,7 @@ const accessGate = document.getElementById("accessGate");
 const accessCodeInput = document.getElementById("accessCodeInput");
 const unlockBtn = document.getElementById("unlockBtn");
 const gateStatus = document.getElementById("gateStatus");
+const demoUnlockBtn = document.getElementById("demoUnlockBtn");
 
 const songSelect = document.getElementById("songSelect");
 const loadSongBtn = document.getElementById("loadSongBtn");
@@ -81,10 +82,18 @@ let recordingBlob = null;
 let recordingUrl = "";
 let customBgUrl = "";
 
+const params = new URLSearchParams(window.location.search);
+const API_BASE = (params.get("apiBase") || "").replace(/\/$/, "");
+const DEMO_CODES = {
+  "L2-DEMO-2026": "patreon_l2_demo",
+  "PROMO-GUEST-2026": "promo_demo",
+};
+
 function setStatus(msg) { statusEl.textContent = msg; }
 function formatDb(v) { return `${Number(v) >= 0 ? "+" : ""}${Number(v)} dB`; }
 function dbToGain(db) { return 10 ** (db / 20); }
 function sanitizeForFilename(text) { return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "side-chain"; }
+function apiUrl(path) { return `${API_BASE}${path}`; }
 
 function lockApp() {
   document.body.classList.add("locked");
@@ -101,7 +110,7 @@ function unlockApp(tier) {
 
 async function verifySession() {
   try {
-    const resp = await fetch("/api/access/verify", { credentials: "include" });
+    const resp = await fetch(apiUrl("/api/access/verify"), { credentials: "include" });
     if (!resp.ok) {
       lockApp();
       return;
@@ -110,6 +119,8 @@ async function verifySession() {
     unlockApp(data.tier || "member");
   } catch {
     lockApp();
+    gateStatus.textContent = "Gateway offline. Start: node side-chain/access-gateway.js";
+    demoUnlockBtn.hidden = false;
   }
 }
 
@@ -124,7 +135,7 @@ async function unlockWithCode() {
   unlockBtn.disabled = true;
 
   try {
-    const resp = await fetch("/api/access/login", {
+    const resp = await fetch(apiUrl("/api/access/login"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -142,9 +153,21 @@ async function unlockWithCode() {
     unlockApp(data.tier);
   } catch (err) {
     console.error(err);
-    gateStatus.textContent = "Server unavailable. Start side-chain/access-gateway.js";
+    gateStatus.textContent = "Server unavailable. Start: node side-chain/access-gateway.js";
+    demoUnlockBtn.hidden = false;
     unlockBtn.disabled = false;
   }
+}
+
+function unlockDemoMode() {
+  const code = accessCodeInput.value.trim();
+  const tier = DEMO_CODES[code];
+  if (!tier) {
+    gateStatus.textContent = "Demo mode accepts L2-DEMO-2026 or PROMO-GUEST-2026";
+    return;
+  }
+  gateStatus.textContent = `Demo mode enabled (${tier}).`;
+  unlockApp(tier);
 }
 
 function hydrateSongMenu() {
@@ -550,6 +573,7 @@ eqMid.addEventListener("input", updateMicToneChain);
 eqHigh.addEventListener("input", updateMicToneChain);
 autoTune.addEventListener("input", updateMicToneChain);
 unlockBtn.addEventListener("click", unlockWithCode);
+demoUnlockBtn.addEventListener("click", unlockDemoMode);
 accessCodeInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") unlockWithCode();
 });
@@ -560,4 +584,5 @@ updateMicToneChain();
 scoreDigits.textContent = "000000";
 hydrateSongMenu();
 loadSong(builtInSongs[0]);
+demoUnlockBtn.hidden = true;
 verifySession();
