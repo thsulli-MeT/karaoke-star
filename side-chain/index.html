@@ -6,8 +6,26 @@
   <title>Side-Chain | Vocal Blend Demo</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="bg-electric-grid">
-  <main class="app">
+<body class="bg-electric-grid locked">
+  <div id="bgFx" class="bg-fx fx-electric"></div>
+
+  <section id="accessGate" class="access-gate">
+    <div class="gate-card">
+      <img class="logo gate-logo" src="../sidechain-logo-color.png" alt="Side-Chain logo" />
+      <h2>Member Access</h2>
+      <p>Enter your Level 2 Patreon code or promo access code to unlock Side-Chain.</p>
+      <label>
+        Access code
+        <input id="accessCodeInput" type="password" placeholder="e.g. L2-XXXX-XXXX" />
+      </label>
+      <div class="row">
+        <button id="unlockBtn">Unlock Side-Chain</button>
+      </div>
+      <p id="gateStatus" class="small">Your access is verified server-side with signed sessions.</p>
+    </div>
+  </section>
+
+  <main id="appRoot" class="app" aria-hidden="true">
     <header class="top-header">
       <img class="logo" src="../sidechain-logo-color.png" alt="Side-Chain logo" />
 
@@ -54,10 +72,10 @@
         <label>
           Background presets
           <select id="bgPresetSelect">
-            <option value="bg-electric-grid">Electrified Grid</option>
-            <option value="bg-rain-fern">Rain + Fern Window</option>
-            <option value="bg-starfield">Starfield Drive</option>
-            <option value="bg-light-phenomena">Light Phenomena</option>
+            <option value="electric">Electrified Grid</option>
+            <option value="rain">Rain + Fern Window</option>
+            <option value="starfield">Starfield Drive</option>
+            <option value="lights">Light Phenomena</option>
           </select>
         </label>
         <button id="applyBgBtn">Apply Background</button>

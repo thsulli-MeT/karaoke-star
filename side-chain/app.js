@@ -3,12 +3,19 @@ const builtInSongs = [
   { title: "Pour It Out - Sample", lead: "../pour-it-out/0 Lead Vocals_01.mp3", instrumental: "../pour-it-out/1 Instrumental_01.mp3" },
 ];
 
+const appRoot = document.getElementById("appRoot");
+const accessGate = document.getElementById("accessGate");
+const accessCodeInput = document.getElementById("accessCodeInput");
+const unlockBtn = document.getElementById("unlockBtn");
+const gateStatus = document.getElementById("gateStatus");
+
 const songSelect = document.getElementById("songSelect");
 const loadSongBtn = document.getElementById("loadSongBtn");
 const leadUpload = document.getElementById("leadUpload");
 const instUpload = document.getElementById("instUpload");
 const loadCustomBtn = document.getElementById("loadCustomBtn");
 
+const bgFx = document.getElementById("bgFx");
 const bgPresetSelect = document.getElementById("bgPresetSelect");
 const applyBgBtn = document.getElementById("applyBgBtn");
 const bgUpload = document.getElementById("bgUpload");
@@ -62,7 +69,6 @@ let recCtx;
 let recDestination;
 let recMicGain;
 let recLeadGain;
-let recInstGain;
 let recMicLow;
 let recMicMid;
 let recMicHigh;
@@ -78,9 +84,67 @@ let customBgUrl = "";
 function setStatus(msg) { statusEl.textContent = msg; }
 function formatDb(v) { return `${Number(v) >= 0 ? "+" : ""}${Number(v)} dB`; }
 function dbToGain(db) { return 10 ** (db / 20); }
+function sanitizeForFilename(text) { return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "side-chain"; }
 
-function sanitizeForFilename(text) {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "side-chain";
+function lockApp() {
+  document.body.classList.add("locked");
+  appRoot.setAttribute("aria-hidden", "true");
+  accessGate.style.display = "grid";
+}
+
+function unlockApp(tier) {
+  document.body.classList.remove("locked");
+  appRoot.setAttribute("aria-hidden", "false");
+  accessGate.style.display = "none";
+  setStatus(`Access granted (${tier}). Ready to sing.`);
+}
+
+async function verifySession() {
+  try {
+    const resp = await fetch("/api/access/verify", { credentials: "include" });
+    if (!resp.ok) {
+      lockApp();
+      return;
+    }
+    const data = await resp.json();
+    unlockApp(data.tier || "member");
+  } catch {
+    lockApp();
+  }
+}
+
+async function unlockWithCode() {
+  const code = accessCodeInput.value.trim();
+  if (!code) {
+    gateStatus.textContent = "Enter an access code first.";
+    return;
+  }
+
+  gateStatus.textContent = "Verifying code...";
+  unlockBtn.disabled = true;
+
+  try {
+    const resp = await fetch("/api/access/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ code }),
+    });
+
+    const data = await resp.json();
+    if (!resp.ok) {
+      gateStatus.textContent = data.error || "Access denied.";
+      unlockBtn.disabled = false;
+      return;
+    }
+
+    gateStatus.textContent = `Access granted for ${data.tier}.`;
+    unlockApp(data.tier);
+  } catch (err) {
+    console.error(err);
+    gateStatus.textContent = "Server unavailable. Start side-chain/access-gateway.js";
+    unlockBtn.disabled = false;
+  }
 }
 
 function hydrateSongMenu() {
@@ -101,8 +165,7 @@ function getMicLevel() {
     const centered = (micData[i] - 128) / 128;
     sumSquares += centered * centered;
   }
-  const rms = Math.sqrt(sumSquares / micData.length);
-  return Math.min(1, rms * 4.2);
+  return Math.min(1, Math.sqrt(sumSquares / micData.length) * 4.2);
 }
 
 function computeLeadVolume(mode, micLevel) {
@@ -124,7 +187,10 @@ function makeDriveCurve(amount = 0) {
 }
 
 function updateMicToneChain() {
-  if (!recMicLow) return;
+  if (!recMicLow) {
+    eqReadout.textContent = `Low ${eqLow.value} dB • Mid ${eqMid.value} dB • High ${eqHigh.value} dB • Auto Tune Assist ${autoTune.value}%`;
+    return;
+  }
 
   recMicLow.gain.value = Number(eqLow.value);
   recMicMid.gain.value = Number(eqMid.value);
@@ -140,13 +206,26 @@ function updateMicToneChain() {
   eqReadout.textContent = `Low ${eqLow.value} dB • Mid ${eqMid.value} dB • High ${eqHigh.value} dB • Auto Tune Assist ${autoTune.value}%`;
 }
 
+function setBackgroundPreset(preset) {
+  document.body.style.backgroundImage = "";
+  document.body.classList.remove("bg-electric-grid", "bg-rain-fern", "bg-starfield", "bg-light-phenomena");
+  const fxMap = {
+    electric: ["bg-electric-grid", "fx-electric"],
+    rain: ["bg-rain-fern", "fx-rain"],
+    starfield: ["bg-starfield", "fx-starfield"],
+    lights: ["bg-light-phenomena", "fx-lights"],
+  };
+  const [bodyClass, fxClass] = fxMap[preset] || fxMap.electric;
+  document.body.classList.add(bodyClass);
+  bgFx.className = `bg-fx ${fxClass}`;
+}
+
 function applyBgPreset() {
-  const klass = bgPresetSelect.value;
-  document.body.className = klass;
   if (customBgUrl) {
     URL.revokeObjectURL(customBgUrl);
     customBgUrl = "";
   }
+  setBackgroundPreset(bgPresetSelect.value);
 }
 
 function applyCustomBackground() {
@@ -158,8 +237,9 @@ function applyCustomBackground() {
 
   if (customBgUrl) URL.revokeObjectURL(customBgUrl);
   customBgUrl = URL.createObjectURL(file);
-  document.body.className = "";
-  document.body.style.backgroundImage = `linear-gradient(rgba(6, 8, 14, 0.45), rgba(6, 8, 14, 0.45)), url('${customBgUrl}')`;
+  document.body.classList.remove("bg-electric-grid", "bg-rain-fern", "bg-starfield", "bg-light-phenomena");
+  bgFx.className = "bg-fx";
+  document.body.style.backgroundImage = `linear-gradient(rgba(6, 8, 14, 0.42), rgba(6, 8, 14, 0.42)), url('${customBgUrl}')`;
   document.body.style.backgroundSize = "cover";
   document.body.style.backgroundPosition = "center";
   setStatus(`Applied custom background: ${file.name}`);
@@ -167,15 +247,13 @@ function applyCustomBackground() {
 
 function updateRecordingMixGains() {
   if (!recLeadGain || !recMicGain) return;
-  const micLevel = getMicLevel();
-  recLeadGain.gain.value = computeLeadVolume(modeSelect.value, micLevel);
+  recLeadGain.gain.value = computeLeadVolume(modeSelect.value, getMicLevel());
   recMicGain.gain.value = dbToGain(Number(recordGain.value));
 }
 
 function tickMeters() {
   const micLevel = getMicLevel();
   const leadLevel = computeLeadVolume(modeSelect.value, micLevel);
-
   leadAudio.volume = leadLevel;
   updateRecordingMixGains();
 
@@ -189,8 +267,7 @@ function tickMeters() {
   leadMeter.style.width = `${leadPct}%`;
   leadValue.textContent = String(leadPct);
 
-  const scorePct = Math.min(100, Math.round(score / 10));
-  scoreMeter.style.width = `${scorePct}%`;
+  scoreMeter.style.width = `${Math.min(100, Math.round(score / 10))}%`;
   scoreValue.textContent = String(score);
   scoreDigits.textContent = String(score).padStart(6, "0");
 
@@ -204,54 +281,36 @@ function applyMicGain() {
 
 async function setupRecordingBus() {
   if (!micStream || recDestination) return;
-
   recCtx = new (window.AudioContext || window.webkitAudioContext)();
   recDestination = recCtx.createMediaStreamDestination();
 
-  const leadStream = leadAudio.captureStream();
-  const instStream = backingAudio.captureStream();
-
-  const recLeadSource = recCtx.createMediaStreamSource(leadStream);
-  const recInstSource = recCtx.createMediaStreamSource(instStream);
+  const recLeadSource = recCtx.createMediaStreamSource(leadAudio.captureStream());
+  const recInstSource = recCtx.createMediaStreamSource(backingAudio.captureStream());
   const recMicSource = recCtx.createMediaStreamSource(micStream);
 
   recLeadGain = recCtx.createGain();
-  recInstGain = recCtx.createGain();
+  const recInstGain = recCtx.createGain();
   recMicGain = recCtx.createGain();
 
   recMicLow = recCtx.createBiquadFilter();
   recMicLow.type = "lowshelf";
   recMicLow.frequency.value = 180;
-
   recMicMid = recCtx.createBiquadFilter();
   recMicMid.type = "peaking";
   recMicMid.frequency.value = 1800;
   recMicMid.Q.value = 1.0;
-
   recMicHigh = recCtx.createBiquadFilter();
   recMicHigh.type = "highshelf";
   recMicHigh.frequency.value = 5200;
-
   recMicComp = recCtx.createDynamicsCompressor();
   recMicShape = recCtx.createWaveShaper();
 
-  recInstGain.gain.value = 1;
-  recLeadGain.gain.value = 1;
-  recMicGain.gain.value = dbToGain(Number(recordGain.value));
-
   recLeadSource.connect(recLeadGain).connect(recDestination);
   recInstSource.connect(recInstGain).connect(recDestination);
-
-  recMicSource
-    .connect(recMicLow)
-    .connect(recMicMid)
-    .connect(recMicHigh)
-    .connect(recMicComp)
-    .connect(recMicShape)
-    .connect(recMicGain)
-    .connect(recDestination);
+  recMicSource.connect(recMicLow).connect(recMicMid).connect(recMicHigh).connect(recMicComp).connect(recMicShape).connect(recMicGain).connect(recDestination);
 
   updateMicToneChain();
+  applyMicGain();
 }
 
 async function enableMic() {
@@ -265,7 +324,6 @@ async function enableMic() {
     micSource.connect(micAnalyser);
 
     await setupRecordingBus();
-    applyMicGain();
 
     micBtn.disabled = true;
     playBtn.disabled = false;
@@ -301,7 +359,6 @@ function loadSong(song) {
   pauseBtn.disabled = true;
   stopBtn.disabled = true;
   recordBtn.disabled = !micStream;
-
   setStatus(`Loaded: ${song.title}`);
 }
 
@@ -369,12 +426,9 @@ function startRecording() {
       : undefined;
 
   mediaRecorder = new MediaRecorder(recDestination.stream, options);
-  mediaRecorder.ondataavailable = (e) => {
-    if (e.data?.size > 0) recordedChunks.push(e.data);
-  };
+  mediaRecorder.ondataavailable = (e) => { if (e.data?.size > 0) recordedChunks.push(e.data); };
   mediaRecorder.onstop = () => {
-    const type = mediaRecorder.mimeType || "audio/webm";
-    recordingBlob = new Blob(recordedChunks, { type });
+    recordingBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/webm" });
     if (recordingUrl) URL.revokeObjectURL(recordingUrl);
     recordingUrl = URL.createObjectURL(recordingBlob);
     replayBtn.disabled = false;
@@ -449,14 +503,9 @@ async function downloadWav() {
   if (!recordingBlob) return setStatus("No recording available for download.");
 
   try {
-    const arrayBuffer = await recordingBlob.arrayBuffer();
-    const decodeCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const audioBuffer = await decodeCtx.decodeAudioData(arrayBuffer.slice(0));
+    const audioBuffer = await new (window.AudioContext || window.webkitAudioContext)().decodeAudioData(await recordingBlob.arrayBuffer());
     const wavBlob = audioBufferToWavBlob(audioBuffer);
-
-    const songName = sanitizeForFilename(currentSong?.title || "side-chain-session");
-    const score = String(Math.round(sessionScore)).padStart(3, "0");
-    const filename = `${songName}_score-${score}.wav`;
+    const filename = `${sanitizeForFilename(currentSong?.title || "side-chain-session")}_score-${String(Math.round(sessionScore)).padStart(3, "0")}.wav`;
 
     const url = URL.createObjectURL(wavBlob);
     const a = document.createElement("a");
@@ -500,9 +549,15 @@ eqLow.addEventListener("input", updateMicToneChain);
 eqMid.addEventListener("input", updateMicToneChain);
 eqHigh.addEventListener("input", updateMicToneChain);
 autoTune.addEventListener("input", updateMicToneChain);
+unlockBtn.addEventListener("click", unlockWithCode);
+accessCodeInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") unlockWithCode();
+});
 
+setBackgroundPreset("electric");
 applyMicGain();
 updateMicToneChain();
 scoreDigits.textContent = "000000";
 hydrateSongMenu();
 loadSong(builtInSongs[0]);
+verifySession();
