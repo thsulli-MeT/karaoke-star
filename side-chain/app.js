@@ -1,6 +1,16 @@
 const builtInSongs = [
-  { title: "Karaoke Star Demo - Root", lead: "../0 Lead Vocals.mp3", instrumental: "../1 Instrumental.mp3" },
-  { title: "Pour It Out - Sample", lead: "../pour-it-out/0 Lead Vocals_01.mp3", instrumental: "../pour-it-out/1 Instrumental_01.mp3" },
+  {
+    title: "Karaoke Star Demo - Root",
+    lead: "../0 Lead Vocals.mp3",
+    instrumental: "../1 Instrumental.mp3",
+    artwork: "../ks-app-banner.jpg",
+  },
+  {
+    title: "Pour It Out - Sample",
+    lead: "../pour-it-out/0 Lead Vocals_01.mp3",
+    instrumental: "../pour-it-out/1 Instrumental_01.mp3",
+    artwork: "../pour-it-out/amcaped.jpg",
+  },
 ];
 
 const appRoot = document.getElementById("appRoot");
@@ -19,6 +29,7 @@ const loadCustomBtn = document.getElementById("loadCustomBtn");
 const bgFx = document.getElementById("bgFx");
 const bgPresetSelect = document.getElementById("bgPresetSelect");
 const applyBgBtn = document.getElementById("applyBgBtn");
+const useSongArtToggle = document.getElementById("useSongArtToggle");
 const bgUpload = document.getElementById("bgUpload");
 const applyCustomBgBtn = document.getElementById("applyCustomBgBtn");
 
@@ -243,7 +254,21 @@ function setBackgroundPreset(preset) {
   bgFx.className = `bg-fx ${fxClass}`;
 }
 
+function applySongArtworkBackground(song) {
+  if (!song?.artwork) return;
+  if (customBgUrl) {
+    URL.revokeObjectURL(customBgUrl);
+    customBgUrl = "";
+  }
+  document.body.classList.remove("bg-electric-grid", "bg-rain-fern", "bg-starfield", "bg-light-phenomena");
+  bgFx.className = "bg-fx";
+  document.body.style.backgroundImage = `linear-gradient(rgba(6, 8, 14, 0.46), rgba(6, 8, 14, 0.46)), url('${song.artwork}')`;
+  document.body.style.backgroundSize = "cover";
+  document.body.style.backgroundPosition = "center";
+}
+
 function applyBgPreset() {
+  useSongArtToggle.checked = false;
   if (customBgUrl) {
     URL.revokeObjectURL(customBgUrl);
     customBgUrl = "";
@@ -252,6 +277,7 @@ function applyBgPreset() {
 }
 
 function applyCustomBackground() {
+  useSongArtToggle.checked = false;
   const file = bgUpload.files?.[0];
   if (!file) {
     setStatus("Choose an image or GIF for custom background.");
@@ -382,6 +408,11 @@ function loadSong(song) {
   pauseBtn.disabled = true;
   stopBtn.disabled = true;
   recordBtn.disabled = !micStream;
+
+  if (useSongArtToggle.checked && song.artwork) {
+    applySongArtworkBackground(song);
+  }
+
   setStatus(`Loaded: ${song.title}`);
 }
 
@@ -559,6 +590,14 @@ loadSongBtn.addEventListener("click", () => loadSong(builtInSongs[Number(songSel
 loadCustomBtn.addEventListener("click", loadCustomFiles);
 applyBgBtn.addEventListener("click", applyBgPreset);
 applyCustomBgBtn.addEventListener("click", applyCustomBackground);
+useSongArtToggle.addEventListener("change", () => {
+  if (!currentSong) return;
+  if (useSongArtToggle.checked && currentSong.artwork) {
+    applySongArtworkBackground(currentSong);
+  } else {
+    setBackgroundPreset(bgPresetSelect.value || "electric");
+  }
+});
 micBtn.addEventListener("click", enableMic);
 playBtn.addEventListener("click", play);
 pauseBtn.addEventListener("click", pause);

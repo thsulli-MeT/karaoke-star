@@ -75,13 +75,13 @@ body.bg-rain-fern { background: radial-gradient(circle at 70% 80%, rgba(30, 90, 
 body.bg-starfield { background: radial-gradient(circle at 50% 50%, #111b3f, #04050a 60%); }
 .bg-fx.fx-starfield::before {
   background:
-    radial-gradient(1px 1px at 10% 15%, #fff, transparent 70%),
-    radial-gradient(1.5px 1.5px at 80% 20%, #fff, transparent 70%),
-    radial-gradient(1px 1px at 35% 70%, #fff, transparent 70%),
-    radial-gradient(2px 2px at 70% 80%, #cce8ff, transparent 70%),
+    radial-gradient(3px 3px at 10% 15%, #fff, transparent 72%),
+    radial-gradient(4px 4px at 80% 20%, #fff, transparent 72%),
+    radial-gradient(3px 3px at 35% 70%, #fff, transparent 72%),
+    radial-gradient(5px 5px at 70% 80%, #cce8ff, transparent 72%),
     radial-gradient(circle at 82% 24%, rgba(124, 95, 255, 0.35), transparent 20%),
     radial-gradient(circle at 14% 76%, rgba(77, 170, 255, 0.3), transparent 24%);
-  animation: starsWarp 6s linear infinite;
+  animation: starsWarp 6s linear infinite, starsTwinkle 2.2s ease-in-out infinite;
 }
 .bg-fx.fx-starfield::after {
   background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1), transparent 55%);
@@ -94,6 +94,10 @@ body.bg-starfield { background: radial-gradient(circle at 50% 50%, #111b3f, #040
 @keyframes warpPulse {
   0%,100% { opacity: 0.2; }
   50% { opacity: 0.5; }
+}
+@keyframes starsTwinkle {
+  0%,100% { opacity: 0.85; }
+  50% { opacity: 1; }
 }
 
 /* Light phenomena */
@@ -186,6 +190,8 @@ h1 { margin: 0; font-size: 2.4rem; letter-spacing: .04em; }
 .pro-tips { font-size: 1rem; color: #d8e6ff; border-color: #3557bd; }
 .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
 label { display: block; font-size: .95rem; color: var(--muted); margin: 10px 0; }
+.toggle-inline { display: flex; align-items: center; gap: 10px; margin-top: 12px; color: #cfe1ff; }
+.toggle-inline input { width: auto; margin: 0; }
 input, select, button {
   margin-top: 6px;
   border-radius: 10px;

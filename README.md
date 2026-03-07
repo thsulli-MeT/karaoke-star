@@ -173,3 +173,26 @@ ACCESS_CODES_JSON=side-chain/access-codes.json SESSION_SECRET="strong-random-sec
 Troubleshooting:
 - If you see `Server unavailable. Start: node side-chain/access-gateway.js`, run the gateway command from repo root.
 - For local fallback only (insecure), click **Use Local Demo Mode** and use demo codes `L2-DEMO-2026` or `PROMO-GUEST-2026`.
+
+
+### Recommended song-pack structure (for scaling)
+
+Yes — using one folder per song is the right pattern. Suggested layout:
+
+```
+side-chain/songs/
+  karaoke-star-demo/
+    song.json
+    thumbnail.jpg
+    0 Lead Vocals.mp3
+    1 Instrumental.mp3
+  pour-it-out/
+    song.json
+    thumbnail.jpg
+    0 Lead Vocals.mp3
+    1 Instrumental.mp3
+```
+
+`song.json` can store title + relative paths so menu updates become data-driven.
+
+You can zip song packs for upload later; a future importer can unpack, validate required files, and append entries automatically.
