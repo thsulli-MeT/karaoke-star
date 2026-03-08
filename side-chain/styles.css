@@ -238,10 +238,39 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 #status { color: #d8e4ff; background: #101634; border: 1px solid #2f407d; border-radius: 10px; padding: 10px; margin-top: 14px; }
 .small { color: var(--muted); font-size: .9rem; }
 
+.lyrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.lyrics-cell {
+  min-height: 280px;
+  border: 1px solid #334278;
+  border-radius: 10px;
+  background: rgba(11, 17, 36, 0.85);
+  padding: 12px;
+}
+.lyrics-editor {
+  width: 100%;
+  min-height: 230px;
+  resize: vertical;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.lyrics-ad-placeholder {
+  min-height: 230px;
+  border: 1px dashed #5774cc;
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(20, 26, 49, 0.65);
+}
+
 @media (max-width: 900px) {
   .top-header { grid-template-columns: 1fr; text-align: center; }
   .logo { margin: 0 auto; }
   .scoreboard-panel { width: 100%; min-width: 0; }
+  .lyrics-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
   .app { padding: 14px; }

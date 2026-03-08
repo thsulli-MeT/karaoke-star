@@ -9,7 +9,7 @@ const builtInSongs = [
     title: "Pour It Out - Sample",
     lead: "../pour-it-out/0 Lead Vocals_01.mp3",
     instrumental: "../pour-it-out/1 Instrumental_01.mp3",
-    artwork: "../pour-it-out/amcaped.jpg",
+    artwork: "../pour-it-out/ks-app-banner.jpg",
   },
 ];
 
@@ -60,6 +60,11 @@ const scoreMeter = document.getElementById("scoreMeter");
 const scoreValue = document.getElementById("scoreValue");
 const scoreDigits = document.getElementById("scoreDigits");
 const statusEl = document.getElementById("status");
+const lyricsSongLabel = document.getElementById("lyricsSongLabel");
+const lyricsEditor = document.getElementById("lyricsEditor");
+const loadLyricsBtn = document.getElementById("loadLyricsBtn");
+const copyLyricsBtn = document.getElementById("copyLyricsBtn");
+const clearLyricsBtn = document.getElementById("clearLyricsBtn");
 
 const backingAudio = new Audio();
 const leadAudio = new Audio();
@@ -99,6 +104,41 @@ const DEMO_CODES = {
   "L2-DEMO-2026": "patreon_l2_demo",
   "PROMO-GUEST-2026": "promo_demo",
 };
+
+const DEFAULT_LYRICS = {
+  "Karaoke Star Demo - Root": [
+    "Sign me up, sign me up, sign me up, fast, I wanna be a karaoke star",
+    "A lip singer with the it factor",
+    "I can dance, prance, and strut about",
+    "Like I was made, just for this",
+    "So let this flow state take me to a higher level, above the clouds",
+    "I wanna be a karaoke star, a genuine karaoke star",
+    "I wanna be a karaoke star, a karaoke star",
+    "",
+    "Since way back when rock n roll first came of age",
+    "Bringing in the rhythm, the blues, the guitar heroes with giant hair",
+    "And oh so, so so so much make up",
+    "I wanna be a karaoke star, a genuine karaoke star",
+  ].join("\n"),
+  "Pour It Out - Sample": [
+    "Here’s what I’m gonna do",
+    "Gonna, Pour it,",
+    "Out while I have something to give",
+    "Pour it out",
+    "I've got something to prove",
+    "I can see my whole life story",
+    "Flashing right before me",
+    "I better do this now",
+    "While I’m in the mood",
+    "Here’s what I’m gonna do",
+    "",
+    "Figured it was gonna be my last chance",
+    "To really work this hard",
+    "Pushing my limits",
+    "Let's see where that takes us",
+  ].join("\n"),
+};
+
 
 function setStatus(msg) { statusEl.textContent = msg; }
 function formatDb(v) { return `${Number(v) >= 0 ? "+" : ""}${Number(v)} dB`; }
@@ -179,6 +219,20 @@ function unlockDemoMode() {
   }
   gateStatus.textContent = `Demo mode enabled (${tier}).`;
   unlockApp(tier);
+}
+
+
+function loadLyricsForCurrentSong() {
+  if (!currentSong) {
+    lyricsSongLabel.textContent = "Lyrics: (none loaded)";
+    return;
+  }
+  const text = DEFAULT_LYRICS[currentSong.title] || "";
+  lyricsEditor.value = text;
+  lyricsSongLabel.textContent = `Lyrics: ${currentSong.title}`;
+  if (!text) {
+    setStatus("No default lyrics found for this song yet. Paste your lyrics into the editor.");
+  }
 }
 
 function hydrateSongMenu() {
@@ -413,6 +467,7 @@ function loadSong(song) {
     applySongArtworkBackground(song);
   }
 
+  loadLyricsForCurrentSong();
   setStatus(`Loaded: ${song.title}`);
 }
 
@@ -611,6 +666,20 @@ eqLow.addEventListener("input", updateMicToneChain);
 eqMid.addEventListener("input", updateMicToneChain);
 eqHigh.addEventListener("input", updateMicToneChain);
 autoTune.addEventListener("input", updateMicToneChain);
+
+loadLyricsBtn.addEventListener("click", loadLyricsForCurrentSong);
+copyLyricsBtn.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(lyricsEditor.value || "");
+    setStatus("Lyrics copied to clipboard.");
+  } catch {
+    setStatus("Clipboard copy failed. You can manually select/copy lyrics.");
+  }
+});
+clearLyricsBtn.addEventListener("click", () => {
+  lyricsEditor.value = "";
+  setStatus("Lyrics editor cleared.");
+});
 unlockBtn.addEventListener("click", unlockWithCode);
 demoUnlockBtn.addEventListener("click", unlockDemoMode);
 accessCodeInput.addEventListener("keydown", (e) => {
@@ -621,6 +690,7 @@ setBackgroundPreset("electric");
 applyMicGain();
 updateMicToneChain();
 scoreDigits.textContent = "000000";
+lyricsSongLabel.textContent = "Lyrics: (none loaded)";
 hydrateSongMenu();
 loadSong(builtInSongs[0]);
 demoUnlockBtn.hidden = true;
