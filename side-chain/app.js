@@ -59,6 +59,7 @@ const leadValue = document.getElementById("leadValue");
 const scoreMeter = document.getElementById("scoreMeter");
 const scoreValue = document.getElementById("scoreValue");
 const scoreDigits = document.getElementById("scoreDigits");
+const lyricsScoreDigits = document.getElementById("lyricsScoreDigits");
 const statusEl = document.getElementById("status");
 const lyricsSongLabel = document.getElementById("lyricsSongLabel");
 const lyricsEditor = document.getElementById("lyricsEditor");
@@ -372,7 +373,9 @@ function tickMeters() {
 
   scoreMeter.style.width = `${Math.min(100, Math.round(score / 10))}%`;
   scoreValue.textContent = String(score);
-  scoreDigits.textContent = String(score).padStart(6, "0");
+  const digits = String(score).padStart(6, "0");
+  scoreDigits.textContent = digits;
+  lyricsScoreDigits.textContent = digits;
 
   meterLoop = requestAnimationFrame(tickMeters);
 }
@@ -456,6 +459,7 @@ function loadSong(song) {
   scoreMeter.style.width = "0%";
   scoreValue.textContent = "0";
   scoreDigits.textContent = "000000";
+  lyricsScoreDigits.textContent = "000000";
   resetMeters();
 
   playBtn.disabled = !micStream;
@@ -690,6 +694,7 @@ setBackgroundPreset("electric");
 applyMicGain();
 updateMicToneChain();
 scoreDigits.textContent = "000000";
+lyricsScoreDigits.textContent = "000000";
 lyricsSongLabel.textContent = "Lyrics: (none loaded)";
 hydrateSongMenu();
 loadSong(builtInSongs[0]);
