@@ -118,7 +118,7 @@ let isPlaying = false;
 let lyricSpeedFactor = 1.0; // 0.75 = slower, 1.0 = normal, 1.25 = faster
 
 let duckingAnimationId = null;
-let currentMode = "share";   // share / assist / ghost
+let currentMode = "practice";   // practice / light / medium / ghost / solo
 let engineMode  = "manual";  // manual / auto
 
 let mediaRecorder = null;
@@ -145,6 +145,7 @@ const stopBtn      = document.getElementById("stopBtn");
 const modeSelect   = document.getElementById("modeSelect");
 const engineSelect = document.getElementById("engineSelect");
 const modeLabel    = document.getElementById("modeLabel");
+const sessionScoreDigitsEl = document.getElementById("sessionScoreDigits");
 
 const micMeter     = document.getElementById("micMeter");
 const leadMeter    = document.getElementById("leadMeter");
@@ -192,21 +193,31 @@ if (lyricsListEl) {
 function setStatus(msg) {
   statusEl.textContent = msg;
 }
+function setBannerScoreDigits(value) {
+  const el = document.getElementById("bannerScoreDigits");
+  if (el) el.textContent = String(value).padStart(6, "0");
+}
 
 function updateModeLabel() {
-  let leadInfo;
-  if (currentMode === "share") {
-    leadInfo = "Lead: up to 100% (ducks with you)";
-  } else if (currentMode === "assist") {
-    leadInfo = "Lead: 50% support";
-  } else {
-    leadInfo = "Lead: 0% (ghost)";
-  }
+  const modeInfo = {
+    practice: "Lead: 100%",
+    light: "Lead: 80% (-20%)",
+    medium: "Lead: 60% (-40%)",
+    ghost: "Lead: 20% (-80%)",
+    solo: "Lead: 0% (-100%)",
+  };
+  const modeName = {
+    practice: "Practice Round",
+    light: "Light Guide",
+    medium: "Medium Drop",
+    ghost: "Ghost Mode",
+    solo: "Solo Star",
+  };
 
   modeLabel.textContent =
-    `Mode: ${currentMode.charAt(0).toUpperCase() + currentMode.slice(1)} · ` +
+    `Mode: ${modeName[currentMode] || currentMode} · ` +
     `Engine: ${engineMode.charAt(0).toUpperCase() + engineMode.slice(1)} · ` +
-    leadInfo;
+    (modeInfo[currentMode] || "Lead: 100%");
 }
 
 function ensureAudioContext() {
@@ -300,6 +311,8 @@ function startPlayback() {
   sessionScore = 0;
   scoreVal.textContent    = "0";
   runScoreVal.textContent = "0";
+  if (sessionScoreDigitsEl) sessionScoreDigitsEl.textContent = "000000";
+  setBannerScoreDigits(0);
   if (scoreMeterFill) {
     scoreMeterFill.style.width = "0%";
   }
@@ -508,9 +521,10 @@ function startDuckingLoop() {
     runningScore = runningScore * 0.9 + instantScore * 0.1;
     scoreVal.textContent = `${Math.round(runningScore)}`;
 
-
     sessionScore += duckStrength * 0.6;
     runScoreVal.textContent = `${Math.round(sessionScore)}`;
+    if (sessionScoreDigitsEl) sessionScoreDigitsEl.textContent = String(Math.round(sessionScore)).padStart(6, "0");
+    setBannerScoreDigits(Math.round(sessionScore));
 
     // Update takeover meter (0–100%) based on running score
     if (scoreMeterFill && scoreMeterLabel) {
@@ -535,20 +549,16 @@ function startDuckingLoop() {
     }
 
     // Mode behavior for guide vocal level
-    let targetVolume;
-    if (currentMode === "share") {
-      // Full side-chain ducking with a floor
-      const baseDuck = 0.5;
-      targetVolume = 1.0;
-      if (duckStrength > 0.15) {
-        targetVolume = 1.0 - duckStrength * (1.0 - baseDuck);
-      }
-    } else if (currentMode === "assist") {
-      // Constant 50% guide vocal for training support
-      targetVolume = 0.5;
-    } else {
-      // Ghost mode – no guide vocal, just instruments
-      targetVolume = 0.0;
+    const baseGuide = {
+      practice: 1.0,
+      light: 0.8,
+      medium: 0.6,
+      ghost: 0.2,
+      solo: 0.0,
+    };
+    let targetVolume = baseGuide[currentMode] ?? 1.0;
+    if (currentMode === "light" || currentMode === "medium" || currentMode === "ghost") {
+      targetVolume = Math.max(0, targetVolume - duckStrength * 0.35);
     }
 
     guideAudio.volume = targetVolume;
@@ -633,8 +643,47 @@ if (speedButtons && speedButtons.length > 0) {
 // Initial UI state
 updateModeLabel();
 updateWeightsFromSliders();
+setBannerScoreDigits(0);
+if (sessionScoreDigitsEl) sessionScoreDigitsEl.textContent = "000000";
 
 
+
+function audioBufferToWavBlob(buffer) {
+  const channels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const length = buffer.length * channels * 2;
+  const wav = new ArrayBuffer(44 + length);
+  const view = new DataView(wav);
+  function writeString(offset, str) {
+    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+  }
+  writeString(0, "RIFF");
+  view.setUint32(4, 36 + length, true);
+  writeString(8, "WAVE");
+  writeString(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, channels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * channels * 2, true);
+  view.setUint16(32, channels * 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, "data");
+  view.setUint32(40, length, true);
+
+  const interleaved = new Float32Array(buffer.length * channels);
+  for (let ch = 0; ch < channels; ch++) {
+    const d = buffer.getChannelData(ch);
+    for (let i = 0; i < buffer.length; i++) interleaved[i * channels + ch] = d[i];
+  }
+  let offset = 44;
+  for (let i = 0; i < interleaved.length; i++) {
+    const sample = Math.max(-1, Math.min(1, interleaved[i]));
+    view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+    offset += 2;
+  }
+  return new Blob([wav], { type: "audio/wav" });
+}
 
 // === Recording controls: capture full mix (backing + guide + mic) for takes ===
 if (recordBtn && stopRecordBtn && recordStatus) {
@@ -693,29 +742,35 @@ if (recordBtn && stopRecordBtn && recordStatus) {
           recordedChunks.push(e.data);
         }
       };
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(recordedChunks, { type: "audio/webm" });
-        const url = URL.createObjectURL(blob);
+      mediaRecorder.onstop = async () => {
+        try {
+          const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+          const decodeCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const audioBuffer = await decodeCtx.decodeAudioData(await blob.arrayBuffer());
+          const wavBlob = audioBufferToWavBlob(audioBuffer);
+          const url = URL.createObjectURL(wavBlob);
 
-        // Clean up previous URL if any
-        if (lastRecordingUrl) {
-          URL.revokeObjectURL(lastRecordingUrl);
+          if (lastRecordingUrl) {
+            URL.revokeObjectURL(lastRecordingUrl);
+          }
+          lastRecordingUrl = url;
+          if (replayBtn) {
+            replayBtn.disabled = false;
+          }
+
+          const a = document.createElement("a");
+          const ts = new Date().toISOString().replace(/[:.]/g, "-");
+          a.href = url;
+          a.download = `karaoke_star_take_${ts}.wav`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+
+          recordStatus.textContent = "Saved " + modeLabel + " WAV recording to your device.";
+        } catch (err) {
+          console.error("WAV conversion failed", err);
+          recordStatus.textContent = "Recording saved as webm fallback.";
         }
-        lastRecordingUrl = url;
-        if (replayBtn) {
-          replayBtn.disabled = false;
-        }
-
-        // Auto-download as before
-        const a = document.createElement("a");
-        const ts = new Date().toISOString().replace(/[:.]/g, "-");
-        a.href = url;
-        a.download = `karaoke_star_take_${ts}.webm`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        recordStatus.textContent = "Saved " + modeLabel + " recording to your device.";
         recordBtn.disabled = false;
         stopRecordBtn.disabled = true;
       };
@@ -893,16 +948,13 @@ if (recordBtn && stopRecordBtn && recordStatus) {
 
 
 
-// ==== Banner Song Nav ====
+// ==== Banner Song Nav + Song Dropdown + Scoreboard ====
 (function() {
   try {
     const banner = document.querySelector(".top-banner");
     if (!banner) return;
-
-    // Avoid injecting twice
     if (banner.querySelector(".ks-banner-nav")) return;
 
-    // Inject minimal styles for the banner nav
     const styleId = "ks-banner-nav-styles";
     if (!document.getElementById(styleId)) {
       const st = document.createElement("style");
@@ -913,10 +965,10 @@ if (recordBtn && stopRecordBtn && recordStatus) {
           top: 10px;
           left: 12px;
           right: 12px;
-          display: flex;
-          justify-content: space-between;
+          display: grid;
+          grid-template-columns: 1fr auto auto;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
           pointer-events: none;
         }
         .ks-banner-brand {
@@ -928,6 +980,7 @@ if (recordBtn && stopRecordBtn && recordStatus) {
           border-radius: 999px;
           background: rgba(5,5,16,0.85);
           box-shadow: 0 6px 14px rgba(0,0,0,0.6);
+          width: fit-content;
         }
         .ks-banner-brand-main {
           font-size: 0.8rem;
@@ -939,54 +992,45 @@ if (recordBtn && stopRecordBtn && recordStatus) {
           font-size: 0.7rem;
           opacity: 0.75;
         }
-        .ks-banner-nav-list {
+        .ks-banner-song-select {
+          pointer-events: auto;
+          background: rgba(12,16,34,0.92);
+          color: #f5f5f5;
+          border: 1px solid rgba(255,255,255,0.25);
+          border-radius: 999px;
+          padding: 6px 10px;
+          font-size: 0.74rem;
+          max-width: 240px;
+        }
+        .ks-banner-score {
           pointer-events: auto;
           display: flex;
-          gap: 8px;
-          padding: 4px 8px;
-          border-radius: 999px;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 2px;
+          padding: 6px 10px;
+          border-radius: 10px;
           background: rgba(5,5,16,0.85);
           box-shadow: 0 6px 14px rgba(0,0,0,0.6);
-          overflow-x: auto;
-          max-width: 60%;
+          border: 1px solid rgba(255,255,255,0.2);
         }
-        .ks-banner-nav-list::-webkit-scrollbar {
-          height: 4px;
+        .ks-banner-score-label {
+          font-size: 0.66rem;
+          opacity: 0.8;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
         }
-        .ks-banner-nav-list::-webkit-scrollbar-thumb {
-          background: rgba(255,255,255,0.35);
-          border-radius: 999px;
-        }
-        .ks-banner-nav-link {
-          display: inline-block;
-          padding: 4px 10px;
-          border-radius: 999px;
-          border: 1px solid rgba(255,255,255,0.22);
-          font-size: 0.75rem;
-          text-decoration: none;
-          color: #f5f5f5;
-          white-space: nowrap;
-          background: rgba(15,15,30,0.9);
-          transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
-        }
-        .ks-banner-nav-link:hover {
-          background: rgba(40,40,80,0.95);
-          border-color: rgba(255,255,255,0.6);
-          transform: translateY(-1px);
-        }
-        .ks-banner-nav-link.ks-active {
-          background: #e6ff4f;
-          color: #111;
-          border-color: #e6ff4f;
+        .ks-banner-score-digits {
+          font-family: "Courier New", monospace;
+          font-size: 1.2rem;
+          letter-spacing: 0.08em;
+          color: #ffcf5a;
+          font-weight: 800;
         }
         @media (max-width: 800px) {
           .ks-banner-nav {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 6px;
-          }
-          .ks-banner-nav-list {
-            max-width: 100%;
+            grid-template-columns: 1fr;
+            justify-items: start;
           }
         }
       `;
@@ -998,17 +1042,7 @@ if (recordBtn && stopRecordBtn && recordStatus) {
 
     const brand = document.createElement("div");
     brand.className = "ks-banner-brand";
-    const bMain = document.createElement("div");
-    bMain.className = "ks-banner-brand-main";
-    bMain.textContent = "Karaoke Star";
-    const bSub = document.createElement("div");
-    bSub.className = "ks-banner-brand-sub";
-    bSub.textContent = "Vocal Training · Powered by Side-Chain";
-    brand.appendChild(bMain);
-    brand.appendChild(bSub);
-
-    const navList = document.createElement("div");
-    navList.className = "ks-banner-nav-list";
+    brand.innerHTML = `<div class="ks-banner-brand-main">Karaoke Star</div><div class="ks-banner-brand-sub">Vocal Training · Powered by Side-Chain</div>`;
 
     const songs = [
       { title: "Karaoke Star", slug: "" },
@@ -1018,26 +1052,35 @@ if (recordBtn && stopRecordBtn && recordStatus) {
       { title: "We Locked Eyes", slug: "we-locked-eyes" }
     ];
 
-    const basePath = "/karaoke-star";
+    const rootBase = window.location.pathname.includes("/karaoke-star") ? "/karaoke-star" : "";
+    const currentPath = window.location.pathname.replace(/\/+$/g, "");
 
-    const currentPath = window.location.pathname.replace(/\/+/g, "/");
+    const songSelect = document.createElement("select");
+    songSelect.className = "ks-banner-song-select";
     songs.forEach(song => {
-      const a = document.createElement("a");
-      const path = song.slug ? `${basePath}/${song.slug}/` : `${basePath}/`;
-      a.href = path;
-      a.textContent = song.title;
-      a.className = "ks-banner-nav-link";
-      if (currentPath === path) {
-        a.classList.add("ks-active");
+      const path = song.slug ? `${rootBase}/${song.slug}/` : `${rootBase}/`;
+      const opt = document.createElement("option");
+      opt.value = path;
+      opt.textContent = song.title;
+      if (currentPath === path.replace(/\/+$/g, "") || (path === "/" && currentPath === "")) {
+        opt.selected = true;
       }
-      navList.appendChild(a);
+      songSelect.appendChild(opt);
+    });
+    songSelect.addEventListener("change", () => {
+      window.location.href = songSelect.value;
     });
 
+    const scoreBox = document.createElement("div");
+    scoreBox.className = "ks-banner-score";
+    scoreBox.innerHTML = `<div class="ks-banner-score-label">Session Score</div><div id="bannerScoreDigits" class="ks-banner-score-digits">000000</div>`;
+
     wrapper.appendChild(brand);
-    wrapper.appendChild(navList);
+    wrapper.appendChild(songSelect);
+    wrapper.appendChild(scoreBox);
     banner.appendChild(wrapper);
+    setBannerScoreDigits(0);
   } catch (e) {
     console.warn("Banner nav init failed:", e);
   }
 })();
-

@@ -153,6 +153,12 @@
     .score-row span {
       white-space: nowrap;
     }
+    .session-score-mini {
+      font-family: "Courier New", monospace;
+      color: #ffd26b;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
     .timer-row {
       display: flex;
       align-items: baseline;
@@ -660,9 +666,11 @@
       <button id="stopBtn" disabled>Stop</button>
 
       <select id="modeSelect">
-        <option value="share">Share</option>
-        <option value="assist">Assist</option>
-        <option value="ghost">Ghost</option>
+        <option value="practice">Practice Round: 100%</option>
+        <option value="light">Light Guide: -20%</option>
+        <option value="medium">Medium Drop: -40%</option>
+        <option value="ghost">Ghost Mode: -80%</option>
+        <option value="solo">Solo Star: -100%</option>
       </select>
 
       <select id="engineSelect">
@@ -716,6 +724,7 @@
           <span id="liveMeterFill"></span>
         </span>
       </span>
+      <span class="session-score-mini">Session: <span id="sessionScoreDigits">000000</span></span>
       <span>Run: <span id="runScoreVal">0</span></span>
       <span>Best Tonight: <span id="bestScoreVal">0</span></span>
     </div>
