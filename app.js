@@ -145,6 +145,7 @@ const stopBtn      = document.getElementById("stopBtn");
 const modeSelect   = document.getElementById("modeSelect");
 const engineSelect = document.getElementById("engineSelect");
 const modeLabel    = document.getElementById("modeLabel");
+const sessionScoreDigitsEl = document.getElementById("sessionScoreDigits");
 
 const micMeter     = document.getElementById("micMeter");
 const leadMeter    = document.getElementById("leadMeter");
@@ -310,6 +311,7 @@ function startPlayback() {
   sessionScore = 0;
   scoreVal.textContent    = "0";
   runScoreVal.textContent = "0";
+  if (sessionScoreDigitsEl) sessionScoreDigitsEl.textContent = "000000";
   setBannerScoreDigits(0);
   if (scoreMeterFill) {
     scoreMeterFill.style.width = "0%";
@@ -518,10 +520,11 @@ function startDuckingLoop() {
     const instantScore = duckStrength * 100;
     runningScore = runningScore * 0.9 + instantScore * 0.1;
     scoreVal.textContent = `${Math.round(runningScore)}`;
-    setBannerScoreDigits(Math.round(sessionScore));
 
     sessionScore += duckStrength * 0.6;
     runScoreVal.textContent = `${Math.round(sessionScore)}`;
+    if (sessionScoreDigitsEl) sessionScoreDigitsEl.textContent = String(Math.round(sessionScore)).padStart(6, "0");
+    setBannerScoreDigits(Math.round(sessionScore));
 
     // Update takeover meter (0–100%) based on running score
     if (scoreMeterFill && scoreMeterLabel) {
@@ -641,6 +644,7 @@ if (speedButtons && speedButtons.length > 0) {
 updateModeLabel();
 updateWeightsFromSliders();
 setBannerScoreDigits(0);
+if (sessionScoreDigitsEl) sessionScoreDigitsEl.textContent = "000000";
 
 
 
