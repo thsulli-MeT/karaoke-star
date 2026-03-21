@@ -12,69 +12,52 @@
   <section id="accessGate" class="access-gate">
     <div class="gate-card">
       <img class="logo gate-logo" src="../sidechain-logo-color.png" alt="Side-Chain logo" />
-      <p class="eyebrow">Members + Promo Access</p>
-      <h2>Unlock Side-Chain</h2>
-      <p>Enter your Patreon Level 2 code or promo code to launch the full karaoke studio.</p>
+      <p class="eyebrow">Welcome to Side-Chain</p>
+      <h2>Your karaoke room is ready</h2>
+      <p>Use the current access code below to jump straight into the lyrics, player, and song selector.</p>
       <label>
         Access code
-        <input id="accessCodeInput" type="text" autocomplete="one-time-code" placeholder="e.g. L2-DEMO-2026" />
+        <input id="accessCodeInput" type="text" autocomplete="one-time-code" placeholder="Enter TryLevel2" />
       </label>
       <div class="row">
-        <button id="unlockBtn">Unlock Side-Chain</button>
+        <button id="unlockBtn">Enter Studio</button>
       </div>
-      <p id="gateStatus" class="small">Your access is verified server-side with signed sessions.</p>
-      <p class="small">Demo codes for local testing: <code>L2-DEMO-2026</code> or <code>PROMO-GUEST-2026</code>.</p>
+      <p id="gateStatus" class="small">Enter <code>TryLevel2</code> to unlock the current build.</p>
+      <p class="small">Current access code: <code>TryLevel2</code>.</p>
       <p id="gateHelp" class="small gate-help">If running local: <code>node side-chain/access-gateway.js</code></p>
       <div class="row">
-        <button id="demoUnlockBtn" class="secondary" hidden>Use Local Demo Mode (Insecure)</button>
+        <button id="demoUnlockBtn" class="secondary" hidden>Use Local Demo Mode</button>
       </div>
     </div>
   </section>
 
   <main id="appRoot" class="app" aria-hidden="true">
-    <header class="hero card">
-      <div class="hero-brand">
+    <header class="hero card compact-hero">
+      <div class="hero-brand single-column">
         <img class="logo" src="../sidechain-logo-color.png" alt="Side-Chain logo" />
         <div class="title-wrap left">
           <p class="eyebrow">A Torus Media Project</p>
           <h1>Side-Chain</h1>
-          <p class="subtitle">Big stage energy, fast karaoke setup, and deeper customization whenever you want it.</p>
-        </div>
-      </div>
-
-      <div class="hero-side">
-        <div class="scoreboard-panel mega-scoreboard">
-          <p class="scoreboard-label">Session Score</p>
-          <div id="scoreDigits" class="scoreboard-digits">000000</div>
-        </div>
-
-        <div class="quickstart-panel">
-          <h2>Quick Start</h2>
-          <ol>
-            <li>Pick a built-in song or upload your stems.</li>
-            <li>Enable your mic.</li>
-            <li>Press play and sing.</li>
-          </ol>
-          <p class="small">Customization options live lower on the page so the main performance flow stays clean and intuitive.</p>
+          <p class="subtitle">Load a song, hit play, and keep the lyrics in view. Scroll for deeper customization only when you want it.</p>
         </div>
       </div>
     </header>
 
-    <section class="pro-tips card">
-      <strong>Pro Tips:</strong> Use headphones • Use a quality microphone • Get close to the mic • Warm up before you record
+    <section class="pro-tips card slim-card">
+      <strong>Quick flow:</strong> Pick a song • Enable mic • Hit play • Follow the lyrics • Scroll down later for advanced polish
     </section>
 
-    <section class="main-stage-grid">
-      <section class="card performance-card">
+    <section class="main-stage-stack">
+      <section class="card performance-card compact-performance">
         <div class="section-heading">
           <div>
             <p class="eyebrow">Main Player</p>
-            <h2>Performance Engine</h2>
+            <h2>Start Singing Fast</h2>
           </div>
-          <div class="mini-status">Everything you need to start singing fast.</div>
+          <div class="mini-status">Song selection stays here; everything else optional is lower on the page.</div>
         </div>
 
-        <div class="load-grid">
+        <div class="load-grid single-focus-grid">
           <div class="sub-card load-card">
             <h3>Song Library</h3>
             <label>
@@ -85,18 +68,9 @@
               <button id="loadSongBtn">Load Selected Song</button>
             </div>
           </div>
-
-          <div class="sub-card load-card">
-            <h3>Load Your Own Stems</h3>
-            <label>Lead vocal stem<input id="leadUpload" type="file" accept="audio/*" /></label>
-            <label>Instrument stem<input id="instUpload" type="file" accept="audio/*" /></label>
-            <div class="row">
-              <button id="loadCustomBtn">Use Uploaded Files</button>
-            </div>
-          </div>
         </div>
 
-        <div class="meter-area spotlight-meters">
+        <div class="meter-area spotlight-meters compact-meters">
           <div>
             <p>Session Score Intensity: <span id="scoreValue">0</span></p>
             <div class="meter"><div id="scoreMeter" class="fill gold"></div></div>
@@ -111,7 +85,7 @@
           </div>
         </div>
 
-        <div class="row wrap controls-row led-button-row">
+        <div class="row wrap controls-row led-button-row main-control-row">
           <button id="micBtn">Enable Mic</button>
           <button id="playBtn" disabled>Play</button>
           <button id="pauseBtn" disabled>Pause</button>
@@ -128,39 +102,25 @@
           </label>
         </div>
 
-        <div class="card sub-card recording-strip">
-          <h3>Record + Export</h3>
-          <div class="row wrap record-controls led-button-row">
-            <label>
-              Mic / Record Gain (dB)
-              <input id="recordGain" type="range" min="-24" max="24" step="1" value="0" />
-            </label>
-            <div class="gain-readout"><span id="recordGainValue">+0 dB</span></div>
-            <button id="recordBtn" disabled>Start Record</button>
-            <button id="stopRecordBtn" disabled>Stop Record</button>
-            <button id="replayBtn" disabled>Replay</button>
-            <button id="downloadWavBtn" disabled>Download WAV</button>
-          </div>
-        </div>
-
         <p id="status">Load a demo song or upload stems to begin.</p>
       </section>
 
-      <section class="card lyrics-section">
+      <section class="card lyrics-section hero-lyrics">
         <div class="lyrics-header-row">
           <div>
             <p class="eyebrow">Lyrics + Score</p>
             <h2>Lyrics Workspace</h2>
           </div>
-          <div class="lyrics-scoreboard-panel">
+          <div class="lyrics-scoreboard-panel mega-inline-scoreboard">
             <p class="scoreboard-label">Session Score</p>
-            <div id="lyricsScoreDigits" class="scoreboard-digits small-digits">000000</div>
+            <div id="scoreDigits" class="scoreboard-digits small-digits">000000</div>
           </div>
         </div>
         <div class="lyrics-grid single-column">
-          <div class="lyrics-cell">
-            <div class="row wrap">
+          <div class="lyrics-cell lyrics-main-cell">
+            <div class="row wrap lyrics-meta-row">
               <strong id="lyricsSongLabel">Lyrics: (none loaded)</strong>
+              <div class="mini-status left-align">Load lyrics for the selected song or paste your own words below.</div>
             </div>
             <div class="row wrap led-button-row compact-row">
               <button id="loadLyricsBtn">Load Song Lyrics</button>
@@ -177,12 +137,36 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">Customization</p>
-          <h2>Dial In Your Perfect Karaoke Setup</h2>
+          <h2>Go Deeper When You Want To</h2>
         </div>
-        <div class="mini-status">Everything a karaoke fan could want, tucked below the main player so beginners stay focused.</div>
+        <div class="mini-status">Advanced uploads, recording, visual themes, and vocal shaping all live below the sing-along view.</div>
       </div>
 
       <div class="controls-grid customization-grid">
+        <div class="sub-card load-card">
+          <h3>Load Your Own Stems</h3>
+          <label>Lead vocal stem<input id="leadUpload" type="file" accept="audio/*" /></label>
+          <label>Instrument stem<input id="instUpload" type="file" accept="audio/*" /></label>
+          <div class="row">
+            <button id="loadCustomBtn">Use Uploaded Files</button>
+          </div>
+        </div>
+
+        <div class="sub-card recording-strip">
+          <h3>Record + Export</h3>
+          <div class="row wrap record-controls led-button-row">
+            <label>
+              Mic / Record Gain (dB)
+              <input id="recordGain" type="range" min="-24" max="24" step="1" value="0" />
+            </label>
+            <div class="gain-readout"><span id="recordGainValue">+0 dB</span></div>
+            <button id="recordBtn" disabled>Start Record</button>
+            <button id="stopRecordBtn" disabled>Stop Record</button>
+            <button id="replayBtn" disabled>Replay</button>
+            <button id="downloadWavBtn" disabled>Download WAV</button>
+          </div>
+        </div>
+
         <div class="sub-card">
           <h3>Visual Theme</h3>
           <label>
@@ -219,7 +203,7 @@
           <h3>Patreon Collectible Lyrics Pages</h3>
           <div class="lyrics-ad-placeholder">
             <p>Spotlight exclusive lyric collectible drops, artwork, links, and release notices here.</p>
-            <p>This keeps the core sing-along area uncluttered while still giving superfans a premium destination.</p>
+            <p>This stays below the main singing view so the first screen feels focused and easy to use.</p>
           </div>
         </div>
       </div>

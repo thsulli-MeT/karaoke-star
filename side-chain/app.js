@@ -59,7 +59,6 @@ const leadValue = document.getElementById("leadValue");
 const scoreMeter = document.getElementById("scoreMeter");
 const scoreValue = document.getElementById("scoreValue");
 const scoreDigits = document.getElementById("scoreDigits");
-const lyricsScoreDigits = document.getElementById("lyricsScoreDigits");
 const statusEl = document.getElementById("status");
 const lyricsSongLabel = document.getElementById("lyricsSongLabel");
 const lyricsEditor = document.getElementById("lyricsEditor");
@@ -102,8 +101,7 @@ let customBgUrl = "";
 const params = new URLSearchParams(window.location.search);
 const API_BASE = (params.get("apiBase") || "").replace(/\/$/, "");
 const DEMO_CODES = {
-  "L2-DEMO-2026": "patreon_l2_demo",
-  "PROMO-GUEST-2026": "promo_demo",
+  TryLevel2: "patreon_l2_demo",
 };
 
 const DEFAULT_LYRICS = {
@@ -215,7 +213,7 @@ function unlockDemoMode() {
   const code = accessCodeInput.value.trim();
   const tier = DEMO_CODES[code];
   if (!tier) {
-    gateStatus.textContent = "Demo mode accepts L2-DEMO-2026 or PROMO-GUEST-2026";
+    gateStatus.textContent = "Demo mode accepts TryLevel2.";
     return;
   }
   gateStatus.textContent = `Demo mode enabled (${tier}).`;
@@ -375,7 +373,6 @@ function tickMeters() {
   scoreValue.textContent = String(score);
   const digits = String(score).padStart(6, "0");
   scoreDigits.textContent = digits;
-  lyricsScoreDigits.textContent = digits;
 
   meterLoop = requestAnimationFrame(tickMeters);
 }
@@ -459,7 +456,6 @@ function loadSong(song) {
   scoreMeter.style.width = "0%";
   scoreValue.textContent = "0";
   scoreDigits.textContent = "000000";
-  lyricsScoreDigits.textContent = "000000";
   resetMeters();
 
   playBtn.disabled = !micStream;
@@ -694,7 +690,6 @@ setBackgroundPreset("electric");
 applyMicGain();
 updateMicToneChain();
 scoreDigits.textContent = "000000";
-lyricsScoreDigits.textContent = "000000";
 lyricsSongLabel.textContent = "Lyrics: (none loaded)";
 hydrateSongMenu();
 loadSong(builtInSongs[0]);
