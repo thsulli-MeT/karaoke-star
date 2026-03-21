@@ -51,6 +51,12 @@ const recordBtn = document.getElementById("recordBtn");
 const stopRecordBtn = document.getElementById("stopRecordBtn");
 const replayBtn = document.getElementById("replayBtn");
 const downloadWavBtn = document.getElementById("downloadWavBtn");
+const resetRecordingBtn = document.getElementById("resetRecordingBtn");
+const enableCamBtn = document.getElementById("enableCamBtn");
+const recordCamBtn = document.getElementById("recordCamBtn");
+const stopCamBtn = document.getElementById("stopCamBtn");
+const downloadVideoBtn = document.getElementById("downloadVideoBtn");
+const webcamPreview = document.getElementById("webcamPreview");
 
 const micMeter = document.getElementById("micMeter");
 const micValue = document.getElementById("micValue");
@@ -96,6 +102,11 @@ let mediaRecorder;
 let recordedChunks = [];
 let recordingBlob = null;
 let recordingUrl = "";
+let webcamStream;
+let webcamRecorder;
+let webcamChunks = [];
+let webcamBlob = null;
+let webcamUrl = "";
 let customBgUrl = "";
 
 const params = new URLSearchParams(window.location.search);
@@ -204,6 +215,12 @@ async function unlockWithCode() {
     unlockApp(data.tier);
   } catch (err) {
     console.error(err);
+    const offlineTier = DEMO_CODES[code];
+    if (offlineTier) {
+      gateStatus.textContent = "Gateway unavailable. Using offline access.";
+      unlockApp(offlineTier);
+      return;
+    }
     gateStatus.textContent = "That room is still locked. Check your access and try again.";
     demoUnlockBtn.hidden = false;
     unlockBtn.disabled = false;
@@ -432,6 +449,8 @@ async function enableMic() {
     micBtn.disabled = true;
     playBtn.disabled = false;
     recordBtn.disabled = false;
+    recordCamBtn.disabled = !webcamStream;
+    refreshResetRecordingButton();
     setStatus("Mic enabled. Ready to sing.");
   } catch (err) {
     setStatus("Mic access failed. Check browser permissions.");
@@ -528,6 +547,7 @@ function startRecording() {
   recordingBlob = null;
   replayBtn.disabled = true;
   downloadWavBtn.disabled = true;
+  refreshResetRecordingButton();
 
   const options = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
     ? { mimeType: "audio/webm;codecs=opus" }
@@ -543,12 +563,14 @@ function startRecording() {
     recordingUrl = URL.createObjectURL(recordingBlob);
     replayBtn.disabled = false;
     downloadWavBtn.disabled = false;
+    refreshResetRecordingButton();
     setStatus("Recording complete. Replay or download WAV.");
   };
 
   mediaRecorder.start();
   recordBtn.disabled = true;
   stopRecordBtn.disabled = false;
+  refreshResetRecordingButton();
   setStatus("Recording started.");
 }
 
@@ -557,6 +579,7 @@ function stopRecording() {
   mediaRecorder.stop();
   stopRecordBtn.disabled = true;
   recordBtn.disabled = false;
+  refreshResetRecordingButton();
 }
 
 function replayRecording() {
@@ -631,6 +654,117 @@ async function downloadWav() {
   }
 }
 
+function refreshResetRecordingButton() {
+  resetRecordingBtn.disabled = !recordingBlob && !webcamBlob && mediaRecorder?.state !== "recording" && webcamRecorder?.state !== "recording";
+}
+
+async function enableWebcam() {
+  try {
+    webcamStream = webcamStream || await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    webcamPreview.srcObject = webcamStream;
+    webcamPreview.muted = true;
+    recordCamBtn.disabled = !recDestination;
+    refreshResetRecordingButton();
+    setStatus("Webcam ready for audition recording.");
+  } catch (err) {
+    console.error(err);
+    setStatus("Webcam access failed. Check browser permissions.");
+  }
+}
+
+function buildAuditionStream() {
+  if (!webcamStream) throw new Error("Enable webcam first.");
+  if (!recDestination) throw new Error("Enable mic first before recording audition video.");
+
+  const mixedStream = new MediaStream();
+  const [videoTrack] = webcamStream.getVideoTracks();
+  if (!videoTrack) throw new Error("No webcam video track available.");
+  mixedStream.addTrack(videoTrack);
+  recDestination.stream.getAudioTracks().forEach((track) => mixedStream.addTrack(track));
+  return mixedStream;
+}
+
+function startWebcamRecording() {
+  if (typeof MediaRecorder === "undefined") return setStatus("Recording not supported in this browser.");
+  if (webcamRecorder?.state === "recording") return;
+
+  let stream;
+  try {
+    stream = buildAuditionStream();
+  } catch (err) {
+    return setStatus(err.message);
+  }
+
+  webcamChunks = [];
+  webcamBlob = null;
+  downloadVideoBtn.disabled = true;
+
+  const options = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
+    ? { mimeType: "video/webm;codecs=vp9,opus" }
+    : MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")
+      ? { mimeType: "video/webm;codecs=vp8,opus" }
+      : MediaRecorder.isTypeSupported("video/webm")
+        ? { mimeType: "video/webm" }
+        : undefined;
+
+  webcamRecorder = new MediaRecorder(stream, options);
+  webcamRecorder.ondataavailable = (e) => { if (e.data?.size > 0) webcamChunks.push(e.data); };
+  webcamRecorder.onstop = () => {
+    webcamBlob = new Blob(webcamChunks, { type: webcamRecorder.mimeType || "video/webm" });
+    if (webcamUrl) URL.revokeObjectURL(webcamUrl);
+    webcamUrl = URL.createObjectURL(webcamBlob);
+    downloadVideoBtn.disabled = false;
+    recordCamBtn.disabled = false;
+    stopCamBtn.disabled = true;
+    refreshResetRecordingButton();
+    setStatus("Audition video complete. Download when ready.");
+  };
+
+  webcamRecorder.start();
+  recordCamBtn.disabled = true;
+  stopCamBtn.disabled = false;
+  refreshResetRecordingButton();
+  setStatus("Recording webcam + mix.");
+}
+
+function stopWebcamRecording() {
+  if (!webcamRecorder || webcamRecorder.state !== "recording") return;
+  webcamRecorder.stop();
+}
+
+function downloadAuditionVideo() {
+  if (!webcamBlob || !webcamUrl) return setStatus("No audition video available yet.");
+  const filename = `${sanitizeForFilename(currentSong?.title || "side-chain-audition")}_audition.webm`;
+  const a = document.createElement("a");
+  a.href = webcamUrl;
+  a.download = filename;
+  a.click();
+  setStatus(`Downloaded audition video: ${filename}`);
+}
+
+function resetRecordingSession() {
+  if (mediaRecorder?.state === "recording") mediaRecorder.stop();
+  if (webcamRecorder?.state === "recording") webcamRecorder.stop();
+  recordedChunks = [];
+  webcamChunks = [];
+  recordingBlob = null;
+  webcamBlob = null;
+  if (recordingUrl) URL.revokeObjectURL(recordingUrl);
+  if (webcamUrl) URL.revokeObjectURL(webcamUrl);
+  recordingUrl = "";
+  webcamUrl = "";
+  replayBtn.disabled = true;
+  downloadWavBtn.disabled = true;
+  refreshResetRecordingButton();
+  downloadVideoBtn.disabled = true;
+  stopRecordBtn.disabled = true;
+  recordBtn.disabled = !micStream;
+  stopCamBtn.disabled = true;
+  recordCamBtn.disabled = !webcamStream || !recDestination;
+  refreshResetRecordingButton();
+  setStatus("Recording takes cleared. Ready for another pass.");
+}
+
 function loadCustomFiles() {
   const leadFile = leadUpload.files?.[0];
   const instFile = instUpload.files?.[0];
@@ -662,6 +796,11 @@ recordBtn.addEventListener("click", startRecording);
 stopRecordBtn.addEventListener("click", stopRecording);
 replayBtn.addEventListener("click", replayRecording);
 downloadWavBtn.addEventListener("click", downloadWav);
+resetRecordingBtn.addEventListener("click", resetRecordingSession);
+enableCamBtn.addEventListener("click", enableWebcam);
+recordCamBtn.addEventListener("click", startWebcamRecording);
+stopCamBtn.addEventListener("click", stopWebcamRecording);
+downloadVideoBtn.addEventListener("click", downloadAuditionVideo);
 recordGain.addEventListener("input", applyMicGain);
 eqLow.addEventListener("input", updateMicToneChain);
 eqMid.addEventListener("input", updateMicToneChain);
@@ -695,4 +834,5 @@ lyricsSongLabel.textContent = "Lyrics: (none loaded)";
 hydrateSongMenu();
 loadSong(builtInSongs[0]);
 demoUnlockBtn.hidden = true;
+refreshResetRecordingButton();
 verifySession();

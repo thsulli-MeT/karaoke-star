@@ -62,25 +62,28 @@
           <button id="loadSongBtn">Load Song</button>
         </div>
 
-        <div class="row wrap controls-row led-button-row main-control-row">
+        <div class="row controls-row led-button-row main-control-row single-line-controls">
           <button id="micBtn">Enable Mic</button>
           <button id="playBtn" disabled>Play</button>
           <button id="pauseBtn" disabled>Pause</button>
           <button id="stopBtn" disabled>Stop</button>
-          <div class="sidechain-spotlight">
+        </div>
+
+        <div class="sidechain-spotlight sidechain-row">
+          <div class="sidechain-row-header">
             <p class="spotlight-kicker">Core Side-Chain Move</p>
-            <label class="sidechain-control-label">
-              Apply Side-Chain
-              <select id="modeSelect" class="sidechain-select">
-                <option value="practice" selected>Warm Up: Full Guide Vocal</option>
-                <option value="light">Side-Chain Lite: -20%</option>
-                <option value="medium">Side-Chain Drive: -40%</option>
-                <option value="ghost">Side-Chain Deep Cut: -80%</option>
-                <option value="solo">Side-Chain Solo: -100%</option>
-              </select>
-            </label>
             <p class="spotlight-challenge">Challenge: pull the lead vocal down as far as you can while it still sounds great.</p>
           </div>
+          <label class="sidechain-control-label">
+            Apply Side-Chain
+            <select id="modeSelect" class="sidechain-select">
+              <option value="practice" selected>Warm Up: Full Guide Vocal</option>
+              <option value="light">Side-Chain Lite: -20%</option>
+              <option value="medium">Side-Chain Drive: -40%</option>
+              <option value="ghost">Side-Chain Deep Cut: -80%</option>
+              <option value="solo">Side-Chain Solo: -100%</option>
+            </select>
+          </label>
         </div>
 
         <p id="status">Load a demo song or upload stems to begin.</p>
@@ -130,6 +133,51 @@
       </section>
     </section>
 
+
+    <section class="card recording-section">
+      <div class="section-heading compact-heading">
+        <div>
+          <p class="eyebrow">Record + Export</p>
+          <h2>Capture the performance</h2>
+        </div>
+        <div class="mini-status">Advanced uploads, recording, visual themes, and vocal shaping all live below the sing-along view.</div>
+      </div>
+      <div class="controls-grid recording-layout">
+        <div class="sub-card recording-strip">
+          <h3>Record + Export</h3>
+          <div class="row wrap record-controls led-button-row">
+            <label>
+              Mic / Record Gain (dB)
+              <input id="recordGain" type="range" min="-24" max="24" step="1" value="0" />
+            </label>
+            <div class="gain-readout"><span id="recordGainValue">+0 dB</span></div>
+            <button id="recordBtn" disabled>Start Audio</button>
+            <button id="stopRecordBtn" disabled>Stop Audio</button>
+            <button id="replayBtn" disabled>Replay</button>
+            <button id="downloadWavBtn" disabled>Download WAV</button>
+            <button id="resetRecordingBtn" class="secondary" disabled>Reset / Clear</button>
+          </div>
+          <div class="webcam-recorder sub-panel">
+            <div class="webcam-header-row">
+              <div>
+                <p class="eyebrow">Audition Tape</p>
+                <h4>Webcam + Mix Capture</h4>
+              </div>
+              <p class="small webcam-note">Records your webcam video with the same vocal mix and side-chain setting you are using.</p>
+            </div>
+            <video id="webcamPreview" class="webcam-preview" autoplay playsinline muted></video>
+            <div class="row wrap led-button-row webcam-controls">
+              <button id="enableCamBtn">Enable Cam</button>
+              <button id="recordCamBtn" disabled>Record Cam + Mix</button>
+              <button id="stopCamBtn" disabled>Stop Cam Record</button>
+              <button id="downloadVideoBtn" disabled>Download Audition Video</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
     <section class="card customization-section">
       <div class="section-heading">
         <div>
@@ -146,21 +194,6 @@
           <label>Instrument stem<input id="instUpload" type="file" accept="audio/*" /></label>
           <div class="row">
             <button id="loadCustomBtn">Use Uploaded Files</button>
-          </div>
-        </div>
-
-        <div class="sub-card recording-strip">
-          <h3>Record + Export</h3>
-          <div class="row wrap record-controls led-button-row">
-            <label>
-              Mic / Record Gain (dB)
-              <input id="recordGain" type="range" min="-24" max="24" step="1" value="0" />
-            </label>
-            <div class="gain-readout"><span id="recordGainValue">+0 dB</span></div>
-            <button id="recordBtn" disabled>Start Record</button>
-            <button id="stopRecordBtn" disabled>Stop Record</button>
-            <button id="replayBtn" disabled>Replay</button>
-            <button id="downloadWavBtn" disabled>Download WAV</button>
           </div>
         </div>
 
