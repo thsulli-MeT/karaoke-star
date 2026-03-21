@@ -241,7 +241,7 @@ button:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
 .recording-note { margin: 14px 0 0; }
 .led-button-row button { min-height: 52px; }
 .compact-row button { min-height: 48px; }
-.main-control-row > button { flex: 1; }
+.main-control-row > button { flex: 0.85; min-width: 0; }
 .sidechain-spotlight {
   flex: 1.6;
   min-width: 300px;
