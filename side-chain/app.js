@@ -59,7 +59,6 @@ const leadValue = document.getElementById("leadValue");
 const scoreMeter = document.getElementById("scoreMeter");
 const scoreValue = document.getElementById("scoreValue");
 const scoreDigits = document.getElementById("scoreDigits");
-const lyricsScoreDigits = document.getElementById("lyricsScoreDigits");
 const statusEl = document.getElementById("status");
 const lyricsSongLabel = document.getElementById("lyricsSongLabel");
 const lyricsEditor = document.getElementById("lyricsEditor");
@@ -101,9 +100,9 @@ let customBgUrl = "";
 
 const params = new URLSearchParams(window.location.search);
 const API_BASE = (params.get("apiBase") || "").replace(/\/$/, "");
+accessCodeInput.value = "";
 const DEMO_CODES = {
-  "L2-DEMO-2026": "patreon_l2_demo",
-  "PROMO-GUEST-2026": "promo_demo",
+  TryLevel2: "patreon_l2_demo",
 };
 
 const DEFAULT_LYRICS = {
@@ -171,7 +170,7 @@ async function verifySession() {
     unlockApp(data.tier || "member");
   } catch {
     lockApp();
-    gateStatus.textContent = "Gateway offline. Start: node side-chain/access-gateway.js";
+    gateStatus.textContent = "The room is offline right now. Check your access and try again soon.";
     demoUnlockBtn.hidden = false;
   }
 }
@@ -205,7 +204,7 @@ async function unlockWithCode() {
     unlockApp(data.tier);
   } catch (err) {
     console.error(err);
-    gateStatus.textContent = "Server unavailable. Start: node side-chain/access-gateway.js";
+    gateStatus.textContent = "That room is still locked. Check your access and try again.";
     demoUnlockBtn.hidden = false;
     unlockBtn.disabled = false;
   }
@@ -215,10 +214,10 @@ function unlockDemoMode() {
   const code = accessCodeInput.value.trim();
   const tier = DEMO_CODES[code];
   if (!tier) {
-    gateStatus.textContent = "Demo mode accepts L2-DEMO-2026 or PROMO-GUEST-2026";
+    gateStatus.textContent = "That code did not open the room.";
     return;
   }
-  gateStatus.textContent = `Demo mode enabled (${tier}).`;
+  gateStatus.textContent = "Offline access granted. Welcome in.";
   unlockApp(tier);
 }
 
@@ -375,7 +374,6 @@ function tickMeters() {
   scoreValue.textContent = String(score);
   const digits = String(score).padStart(6, "0");
   scoreDigits.textContent = digits;
-  lyricsScoreDigits.textContent = digits;
 
   meterLoop = requestAnimationFrame(tickMeters);
 }
@@ -459,7 +457,6 @@ function loadSong(song) {
   scoreMeter.style.width = "0%";
   scoreValue.textContent = "0";
   scoreDigits.textContent = "000000";
-  lyricsScoreDigits.textContent = "000000";
   resetMeters();
 
   playBtn.disabled = !micStream;
@@ -694,7 +691,6 @@ setBackgroundPreset("electric");
 applyMicGain();
 updateMicToneChain();
 scoreDigits.textContent = "000000";
-lyricsScoreDigits.textContent = "000000";
 lyricsSongLabel.textContent = "Lyrics: (none loaded)";
 hydrateSongMenu();
 loadSong(builtInSongs[0]);
