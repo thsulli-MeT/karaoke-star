@@ -52,7 +52,6 @@
             <p class="eyebrow">Main Player</p>
             <h2>Load, play, and sing</h2>
           </div>
-          <div class="mini-status">Song selection stays on top; everything else optional is lower on the page.</div>
         </div>
 
         <div class="load-row sub-card load-card single-line-load">
@@ -60,7 +59,7 @@
             Song selection
             <select id="songSelect"></select>
           </label>
-          <button id="loadSongBtn">Load Selected Song</button>
+          <button id="loadSongBtn">Load Song</button>
         </div>
 
         <div class="row wrap controls-row led-button-row main-control-row">
@@ -80,7 +79,7 @@
                 <option value="solo">Side-Chain Solo: -100%</option>
               </select>
             </label>
-            <p class="spotlight-copy">Try this first. It ducks the guide vocal so singers instantly feel the Side-Chain + Karaoke Star concept in action.</p>
+            <p class="spotlight-challenge">Challenge: pull the lead vocal down as far as you can while it still sounds great.</p>
           </div>
         </div>
 
@@ -89,31 +88,29 @@
 
       <section class="card lyrics-section hero-lyrics">
         <div class="lyrics-header-row compact-banner-row">
-          <div class="lyrics-title-block">
+          <div class="lyrics-title-block inline-title-block">
             <p class="eyebrow">Lyrics + Score</p>
             <h2>Lyrics Workspace</h2>
           </div>
-          <div class="lyrics-banner-stats">
-            <div class="lyrics-performance-panel compact-performance-panel">
-              <div class="meter-area inline-meters banner-meters">
-                <div>
-                  <p>Session Score Intensity: <span id="scoreValue">0</span></p>
-                  <div class="meter"><div id="scoreMeter" class="fill gold"></div></div>
-                </div>
-                <div>
-                  <p>Mic Presence: <span id="micValue">0</span>%</p>
-                  <div class="meter"><div id="micMeter" class="fill"></div></div>
-                </div>
-                <div>
-                  <p>Lead Vocal Level: <span id="leadValue">0</span>%</p>
-                  <div class="meter"><div id="leadMeter" class="fill blue"></div></div>
-                </div>
+          <div class="lyrics-performance-panel compact-performance-panel">
+            <div class="meter-area inline-meters banner-meters">
+              <div>
+                <p>Session Score Intensity: <span id="scoreValue">0</span></p>
+                <div class="meter"><div id="scoreMeter" class="fill gold"></div></div>
+              </div>
+              <div>
+                <p>Mic Presence: <span id="micValue">0</span>%</p>
+                <div class="meter"><div id="micMeter" class="fill"></div></div>
+              </div>
+              <div>
+                <p>Lead Vocal Level: <span id="leadValue">0</span>%</p>
+                <div class="meter"><div id="leadMeter" class="fill blue"></div></div>
               </div>
             </div>
-            <div class="lyrics-scoreboard-panel mega-inline-scoreboard">
-              <p class="scoreboard-label">Session Score</p>
-              <div id="scoreDigits" class="scoreboard-digits small-digits">000000</div>
-            </div>
+          </div>
+          <div class="lyrics-scoreboard-panel mega-inline-scoreboard">
+            <p class="scoreboard-label">Session Score</p>
+            <div id="scoreDigits" class="scoreboard-digits small-digits">000000</div>
           </div>
         </div>
         <div class="lyrics-grid single-column">
