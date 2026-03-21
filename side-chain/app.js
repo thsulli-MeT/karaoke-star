@@ -748,6 +748,11 @@ async function downloadRecording() {
   if (recordingKind === "audio") {
     return downloadWav();
   }
+}
+
+function buildAuditionStream() {
+  if (!webcamStream) throw new Error("Enable webcam first.");
+  if (!recDestination) throw new Error("Enable mic first before recording audition video.");
 
   const extension = recordingBlob.type.includes("mp4") ? "mp4" : "webm";
   const filename = `${sanitizeForFilename(currentSong?.title || "side-chain-audition")}_${videoOrientationSelect.value}.${extension}`;
