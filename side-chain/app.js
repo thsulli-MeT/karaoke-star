@@ -45,6 +45,9 @@ const eqHigh = document.getElementById("eqHigh");
 const autoTune = document.getElementById("autoTune");
 const eqReadout = document.getElementById("eqReadout");
 
+const captureModeSelect = document.getElementById("captureModeSelect");
+const videoFormatSelect = document.getElementById("videoFormatSelect");
+const videoOrientationSelect = document.getElementById("videoOrientationSelect");
 const recordGain = document.getElementById("recordGain");
 const recordGainValue = document.getElementById("recordGainValue");
 const recordBtn = document.getElementById("recordBtn");
@@ -52,11 +55,10 @@ const stopRecordBtn = document.getElementById("stopRecordBtn");
 const replayBtn = document.getElementById("replayBtn");
 const downloadWavBtn = document.getElementById("downloadWavBtn");
 const resetRecordingBtn = document.getElementById("resetRecordingBtn");
-const enableCamBtn = document.getElementById("enableCamBtn");
-const recordCamBtn = document.getElementById("recordCamBtn");
-const stopCamBtn = document.getElementById("stopCamBtn");
-const downloadVideoBtn = document.getElementById("downloadVideoBtn");
 const webcamPreview = document.getElementById("webcamPreview");
+const webcamPlaceholder = document.getElementById("webcamPlaceholder");
+const webcamLiveNote = document.getElementById("webcamLiveNote");
+const recordCanvas = document.getElementById("recordCanvas");
 
 const micMeter = document.getElementById("micMeter");
 const micValue = document.getElementById("micValue");
@@ -102,11 +104,11 @@ let mediaRecorder;
 let recordedChunks = [];
 let recordingBlob = null;
 let recordingUrl = "";
+let recordingMimeType = "";
+let recordingKind = "audio";
 let webcamStream;
-let webcamRecorder;
-let webcamChunks = [];
-let webcamBlob = null;
-let webcamUrl = "";
+let canvasStream;
+let canvasRenderLoop;
 let customBgUrl = "";
 
 const params = new URLSearchParams(window.location.search);
@@ -449,7 +451,6 @@ async function enableMic() {
     micBtn.disabled = true;
     playBtn.disabled = false;
     recordBtn.disabled = false;
-    recordCamBtn.disabled = !webcamStream;
     refreshResetRecordingButton();
     setStatus("Mic enabled. Ready to sing.");
   } catch (err) {
@@ -538,40 +539,178 @@ function stop() {
   setStatus("Stopped.");
 }
 
-function startRecording() {
-  if (!recDestination) return setStatus("Enable mic first before recording.");
+function showPromoPlaceholder() {
+  webcamPlaceholder.hidden = false;
+  webcamPreview.hidden = true;
+  webcamLiveNote.hidden = true;
+}
+
+function showLiveWebcam() {
+  webcamPlaceholder.hidden = true;
+  webcamPreview.hidden = false;
+  webcamLiveNote.hidden = false;
+}
+
+async function ensureWebcam() {
+  if (webcamStream) {
+    showLiveWebcam();
+    return webcamStream;
+  }
+  webcamStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+  webcamPreview.srcObject = webcamStream;
+  webcamPreview.muted = true;
+  showLiveWebcam();
+  return webcamStream;
+}
+
+function getVideoFrameSize() {
+  return videoOrientationSelect.value === "portrait"
+    ? { width: 1080, height: 1920 }
+    : { width: 1920, height: 1080 };
+}
+
+function updatePreviewOrientation() {
+  webcamPreview.style.aspectRatio = videoOrientationSelect.value === "portrait" ? "9 / 16" : "16 / 9";
+}
+
+function stopCanvasPreviewLoop() {
+  if (canvasRenderLoop) {
+    cancelAnimationFrame(canvasRenderLoop);
+    canvasRenderLoop = null;
+  }
+}
+
+function drawWebcamFrame() {
+  if (!webcamStream || webcamPreview.readyState < 2) {
+    canvasRenderLoop = requestAnimationFrame(drawWebcamFrame);
+    return;
+  }
+
+  const { width, height } = getVideoFrameSize();
+  if (recordCanvas.width !== width || recordCanvas.height !== height) {
+    recordCanvas.width = width;
+    recordCanvas.height = height;
+  }
+
+  const ctx = recordCanvas.getContext("2d");
+  const sourceWidth = webcamPreview.videoWidth || width;
+  const sourceHeight = webcamPreview.videoHeight || height;
+  const sourceRatio = sourceWidth / sourceHeight;
+  const targetRatio = width / height;
+
+  let sx = 0;
+  let sy = 0;
+  let sw = sourceWidth;
+  let sh = sourceHeight;
+
+  if (sourceRatio > targetRatio) {
+    sw = sourceHeight * targetRatio;
+    sx = (sourceWidth - sw) / 2;
+  } else {
+    sh = sourceWidth / targetRatio;
+    sy = (sourceHeight - sh) / 2;
+  }
+
+  ctx.clearRect(0, 0, width, height);
+  ctx.drawImage(webcamPreview, sx, sy, sw, sh, 0, 0, width, height);
+  canvasRenderLoop = requestAnimationFrame(drawWebcamFrame);
+}
+
+async function ensureCanvasStream() {
+  await ensureWebcam();
+  stopCanvasPreviewLoop();
+  drawWebcamFrame();
+  if (canvasStream) canvasStream.getTracks().forEach((track) => track.stop());
+  canvasStream = recordCanvas.captureStream(30);
+  return canvasStream;
+}
+
+function getCaptureMode() {
+  return captureModeSelect.value;
+}
+
+function getPreferredVideoMimeType() {
+  const preferred = videoFormatSelect.value === "social"
+    ? ["video/mp4;codecs=h264,aac", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"]
+    : ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4"];
+  return preferred.find((type) => MediaRecorder.isTypeSupported(type));
+}
+
+async function buildRecordingStream(mode) {
+  if (!micStream) throw new Error("Enable mic first before recording.");
+  if (!recDestination) throw new Error("Recording bus not ready yet.");
+
+  const wantsCam = mode === "mic_mix_cam" || mode === "mic_cam";
+  const wantsMix = mode === "mic_mix" || mode === "mic_mix_cam";
+
+  const stream = new MediaStream();
+  const audioSource = wantsMix ? recDestination.stream : micStream;
+  audioSource.getAudioTracks().forEach((track) => stream.addTrack(track));
+
+  if (wantsCam) {
+    const camStream = await ensureCanvasStream();
+    const [videoTrack] = camStream.getVideoTracks();
+    if (!videoTrack) throw new Error("Webcam video track unavailable.");
+    stream.addTrack(videoTrack);
+  }
+
+  return { stream, wantsCam };
+}
+
+function refreshResetRecordingButton() {
+  resetRecordingBtn.disabled = !recordingBlob && mediaRecorder?.state !== "recording";
+}
+
+async function startRecording() {
   if (typeof MediaRecorder === "undefined") return setStatus("Recording not supported in this browser.");
   if (mediaRecorder?.state === "recording") return;
 
+  const mode = getCaptureMode();
+  let streamInfo;
+  try {
+    streamInfo = await buildRecordingStream(mode);
+  } catch (err) {
+    console.error(err);
+    setStatus(err.message);
+    return;
+  }
+
   recordedChunks = [];
   recordingBlob = null;
+  recordingKind = streamInfo.wantsCam ? "video" : "audio";
   replayBtn.disabled = true;
   downloadWavBtn.disabled = true;
   refreshResetRecordingButton();
 
-  const options = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-    ? { mimeType: "audio/webm;codecs=opus" }
-    : MediaRecorder.isTypeSupported("audio/webm")
-      ? { mimeType: "audio/webm" }
-      : undefined;
+  const options = recordingKind === "video"
+    ? (() => {
+        const mimeType = getPreferredVideoMimeType();
+        return mimeType ? { mimeType } : undefined;
+      })()
+    : MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? { mimeType: "audio/webm;codecs=opus" }
+      : MediaRecorder.isTypeSupported("audio/webm")
+        ? { mimeType: "audio/webm" }
+        : undefined;
 
-  mediaRecorder = new MediaRecorder(recDestination.stream, options);
+  mediaRecorder = new MediaRecorder(streamInfo.stream, options);
+  recordingMimeType = options?.mimeType || (recordingKind === "video" ? "video/webm" : "audio/webm");
   mediaRecorder.ondataavailable = (e) => { if (e.data?.size > 0) recordedChunks.push(e.data); };
   mediaRecorder.onstop = () => {
-    recordingBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+    recordingBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || recordingMimeType });
     if (recordingUrl) URL.revokeObjectURL(recordingUrl);
     recordingUrl = URL.createObjectURL(recordingBlob);
     replayBtn.disabled = false;
     downloadWavBtn.disabled = false;
     refreshResetRecordingButton();
-    setStatus("Recording complete. Replay or download WAV.");
+    setStatus(`${recordingKind === "video" ? "Video" : "Audio"} recording complete. Replay or download your take.`);
   };
 
   mediaRecorder.start();
   recordBtn.disabled = true;
   stopRecordBtn.disabled = false;
   refreshResetRecordingButton();
-  setStatus("Recording started.");
+  setStatus(`Recording ${recordingKind === "video" ? `${videoOrientationSelect.value} video + audio` : "audio"}.`);
 }
 
 function stopRecording() {
@@ -583,75 +722,54 @@ function stopRecording() {
 }
 
 function replayRecording() {
-  if (!recordingUrl) return setStatus("No recording available yet.");
-  const audio = new Audio(recordingUrl);
-  audio.play().catch((err) => {
-    setStatus("Replay failed.");
+  if (!recordingUrl || !recordingBlob) return setStatus("No recording available yet.");
+  const el = recordingKind === "video" ? document.createElement("video") : document.createElement("audio");
+  el.src = recordingUrl;
+  el.controls = true;
+  el.autoplay = true;
+  if (recordingKind === "video") {
+    el.muted = false;
+    el.playsInline = true;
+    Object.assign(el.style, {
+      position: "fixed", right: "16px", bottom: "16px", width: "min(360px, 88vw)", zIndex: 20,
+      borderRadius: "16px", border: "1px solid rgba(120,150,255,0.45)", background: "#050814",
+    });
+    document.body.appendChild(el);
+    el.addEventListener("ended", () => el.remove(), { once: true });
+  }
+  el.play().catch((err) => {
     console.error(err);
+    setStatus("Replay failed.");
   });
 }
 
-function audioBufferToWavBlob(buffer) {
-  const channels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const length = buffer.length * channels * 2;
-  const wav = new ArrayBuffer(44 + length);
-  const view = new DataView(wav);
-
-  function writeString(offset, string) {
-    for (let i = 0; i < string.length; i += 1) view.setUint8(offset + i, string.charCodeAt(i));
+async function downloadRecording() {
+  if (!recordingBlob) return setStatus("No recording available for download.");
+  if (recordingKind === "audio") {
+    return downloadWav();
   }
 
-  writeString(0, "RIFF");
-  view.setUint32(4, 36 + length, true);
-  writeString(8, "WAVE");
-  writeString(12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, channels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * channels * 2, true);
-  view.setUint16(32, channels * 2, true);
-  view.setUint16(34, 16, true);
-  writeString(36, "data");
-  view.setUint32(40, length, true);
-
-  const interleaved = new Float32Array(buffer.length * channels);
-  for (let ch = 0; ch < channels; ch += 1) {
-    const channelData = buffer.getChannelData(ch);
-    for (let i = 0; i < buffer.length; i += 1) interleaved[i * channels + ch] = channelData[i];
-  }
-
-  let offset = 44;
-  for (let i = 0; i < interleaved.length; i += 1) {
-    const s = Math.max(-1, Math.min(1, interleaved[i]));
-    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-    offset += 2;
-  }
-
-  return new Blob([wav], { type: "audio/wav" });
+  const extension = recordingBlob.type.includes("mp4") ? "mp4" : "webm";
+  const filename = `${sanitizeForFilename(currentSong?.title || "side-chain-audition")}_${videoOrientationSelect.value}.${extension}`;
+  const a = document.createElement("a");
+  a.href = recordingUrl;
+  a.download = filename;
+  a.click();
+  setStatus(`Downloaded recording: ${filename}`);
 }
 
-async function downloadWav() {
-  if (!recordingBlob) return setStatus("No recording available for download.");
-
-  try {
-    const audioBuffer = await new (window.AudioContext || window.webkitAudioContext)().decodeAudioData(await recordingBlob.arrayBuffer());
-    const wavBlob = audioBufferToWavBlob(audioBuffer);
-    const filename = `${sanitizeForFilename(currentSong?.title || "side-chain-session")}_score-${String(Math.round(sessionScore)).padStart(3, "0")}.wav`;
-
-    const url = URL.createObjectURL(wavBlob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    setStatus(`Downloaded WAV: ${filename}`);
-  } catch (err) {
-    console.error(err);
-    setStatus("WAV conversion failed in this browser. Try Chrome/Edge.");
-  }
+function resetRecordingSession() {
+  if (mediaRecorder?.state === "recording") mediaRecorder.stop();
+  recordedChunks = [];
+  recordingBlob = null;
+  if (recordingUrl) URL.revokeObjectURL(recordingUrl);
+  recordingUrl = "";
+  replayBtn.disabled = true;
+  downloadWavBtn.disabled = true;
+  stopRecordBtn.disabled = true;
+  recordBtn.disabled = !micStream;
+  refreshResetRecordingButton();
+  setStatus("Recording take cleared. Ready for another pass.");
 }
 
 function refreshResetRecordingButton() {
@@ -795,13 +913,17 @@ stopBtn.addEventListener("click", stop);
 recordBtn.addEventListener("click", startRecording);
 stopRecordBtn.addEventListener("click", stopRecording);
 replayBtn.addEventListener("click", replayRecording);
-downloadWavBtn.addEventListener("click", downloadWav);
+downloadWavBtn.addEventListener("click", downloadRecording);
 resetRecordingBtn.addEventListener("click", resetRecordingSession);
-enableCamBtn.addEventListener("click", enableWebcam);
-recordCamBtn.addEventListener("click", startWebcamRecording);
-stopCamBtn.addEventListener("click", stopWebcamRecording);
-downloadVideoBtn.addEventListener("click", downloadAuditionVideo);
 recordGain.addEventListener("input", applyMicGain);
+videoOrientationSelect.addEventListener("change", () => {
+  updatePreviewOrientation();
+  if (webcamStream) ensureCanvasStream().catch((err) => console.error(err));
+});
+captureModeSelect.addEventListener("change", () => {
+  const needsCam = captureModeSelect.value.includes("cam");
+  if (needsCam) ensureWebcam().catch((err) => setStatus(err.message || "Webcam access failed."));
+});
 eqLow.addEventListener("input", updateMicToneChain);
 eqMid.addEventListener("input", updateMicToneChain);
 eqHigh.addEventListener("input", updateMicToneChain);
@@ -827,6 +949,8 @@ accessCodeInput.addEventListener("keydown", (e) => {
 });
 
 setBackgroundPreset("electric");
+updatePreviewOrientation();
+showPromoPlaceholder();
 applyMicGain();
 updateMicToneChain();
 scoreDigits.textContent = "000000";

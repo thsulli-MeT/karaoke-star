@@ -214,30 +214,31 @@ button:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
 .single-line-controls { flex-wrap: nowrap; }
 .controls-row { margin-top: 14px; align-items: end; }
 .record-controls { align-items: end; }
-.webcam-recorder { margin-top: 14px; }
-.sub-panel {
-  border: 1px solid rgba(93, 118, 208, 0.42);
-  border-radius: 16px;
-  padding: 14px;
-  background: rgba(9, 14, 31, 0.76);
-}
-.webcam-header-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: start;
-  margin-bottom: 12px;
-}
-.webcam-note { max-width: 380px; text-align: right; }
 .webcam-preview {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 9 / 16;
   border-radius: 16px;
   border: 1px solid rgba(101, 138, 255, 0.45);
   background: linear-gradient(180deg, rgba(5, 8, 18, 0.94), rgba(8, 12, 26, 0.98));
   object-fit: cover;
 }
-.webcam-controls { margin-top: 12px; }
+.side-preview { min-height: 420px; }
+.webcam-side-cell { display: grid; gap: 12px; align-content: start; }
+.webcam-placeholder { display: grid; gap: 12px; }
+.webcam-placeholder iframe {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  border: 1px solid rgba(101, 138, 255, 0.45);
+  border-radius: 16px;
+  background: #050814;
+}
+.webcam-side-header { display: grid; gap: 8px; }
+.webcam-side-note,
+.webcam-preview-meta { line-height: 1.45; }
+.unified-recording-strip { padding: 16px; }
+.unified-record-controls { align-items: end; }
+.unified-record-actions { margin-top: 14px; }
+.recording-note { margin: 14px 0 0; }
 .led-button-row button { min-height: 52px; }
 .compact-row button { min-height: 48px; }
 .main-control-row > button { flex: 1; }
@@ -379,6 +380,7 @@ code {
 .small-digits { font-size: clamp(2.4rem, 5vw, 3.5rem); }
 .lyrics-grid { display: grid; gap: 14px; }
 .lyrics-grid.single-column { grid-template-columns: 1fr; }
+.split-lyrics-grid { grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.85fr); align-items: stretch; }
 .lyrics-cell {
   min-height: 280px;
   border: 1px solid #334278;
@@ -411,13 +413,13 @@ code {
   .load-row { grid-template-columns: 1fr; }
   .sidechain-row,
   .lyrics-header-row,
-  .section-heading,
-  .webcam-header-row { flex-direction: column; align-items: stretch; }
+  .section-heading { flex-direction: column; align-items: stretch; }
   .sidechain-row { grid-template-columns: 1fr; }
+  .split-lyrics-grid { grid-template-columns: 1fr; }
   .lyrics-performance-panel,
   .lyrics-scoreboard-panel { min-width: 0; }
   .banner-meters { grid-template-columns: 1fr; }
-  .webcam-note { text-align: left; max-width: none; }
+  .side-preview { min-height: 320px; }
 }
 @media (max-width: 640px) {
   .app { padding: 14px; }

@@ -116,7 +116,7 @@
             <div id="scoreDigits" class="scoreboard-digits small-digits">000000</div>
           </div>
         </div>
-        <div class="lyrics-grid single-column">
+        <div class="lyrics-grid split-lyrics-grid">
           <div class="lyrics-cell lyrics-main-cell">
             <div class="row wrap lyrics-meta-row">
               <strong id="lyricsSongLabel">Lyrics: (none loaded)</strong>
@@ -129,6 +129,32 @@
             </div>
             <textarea id="lyricsEditor" class="lyrics-editor" placeholder="Editable lyrics area (scrollable). You can paste your own lyrics here."></textarea>
           </div>
+          <aside class="lyrics-cell webcam-side-cell">
+            <div class="webcam-side-header">
+              <div>
+                <p class="eyebrow">Camera View</p>
+                <h3>Audition Preview</h3>
+              </div>
+              <p class="small webcam-side-note">Use portrait 9:16 for phone-first sharing or landscape 16:9 for classic karaoke takes.</p>
+            </div>
+            <div id="webcamPlaceholder" class="webcam-placeholder promo-placeholder">
+              <iframe
+                src="https://www.youtube.com/embed/5KCAoyxS9Cc?start=16"
+                title="Side-Chain promo video"
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+              <div class="webcam-preview-meta small">
+                Promo / ad space lives here until the singer turns on the webcam. For now it spotlights the Side-Chain YouTube channel.
+              </div>
+            </div>
+            <video id="webcamPreview" class="webcam-preview side-preview" autoplay playsinline muted hidden></video>
+            <canvas id="recordCanvas" hidden></canvas>
+            <div id="webcamLiveNote" class="webcam-preview-meta small" hidden>
+              Live webcam preview stays here while you sing so the main controls, lyrics, and camera are all visible together.
+            </div>
+          </aside>
         </div>
       </section>
     </section>
@@ -142,39 +168,45 @@
         </div>
         <div class="mini-status">Advanced uploads, recording, visual themes, and vocal shaping all live below the sing-along view.</div>
       </div>
-      <div class="controls-grid recording-layout">
-        <div class="sub-card recording-strip">
-          <h3>Record + Export</h3>
-          <div class="row wrap record-controls led-button-row">
-            <label>
-              Mic / Record Gain (dB)
-              <input id="recordGain" type="range" min="-24" max="24" step="1" value="0" />
-            </label>
-            <div class="gain-readout"><span id="recordGainValue">+0 dB</span></div>
-            <button id="recordBtn" disabled>Start Audio</button>
-            <button id="stopRecordBtn" disabled>Stop Audio</button>
-            <button id="replayBtn" disabled>Replay</button>
-            <button id="downloadWavBtn" disabled>Download WAV</button>
-            <button id="resetRecordingBtn" class="secondary" disabled>Reset / Clear</button>
-          </div>
-          <div class="webcam-recorder sub-panel">
-            <div class="webcam-header-row">
-              <div>
-                <p class="eyebrow">Audition Tape</p>
-                <h4>Webcam + Mix Capture</h4>
-              </div>
-              <p class="small webcam-note">Records your webcam video with the same vocal mix and side-chain setting you are using.</p>
-            </div>
-            <video id="webcamPreview" class="webcam-preview" autoplay playsinline muted></video>
-            <div class="row wrap led-button-row webcam-controls">
-              <button id="enableCamBtn">Enable Cam</button>
-              <button id="recordCamBtn" disabled>Record Cam + Mix</button>
-              <button id="stopCamBtn" disabled>Stop Cam Record</button>
-              <button id="downloadVideoBtn" disabled>Download Audition Video</button>
-            </div>
-          </div>
+      <div class="sub-card recording-strip unified-recording-strip">
+        <div class="row wrap record-controls unified-record-controls">
+          <label>
+            Capture mode
+            <select id="captureModeSelect">
+              <option value="mic_only">Mic Only</option>
+              <option value="mic_mix" selected>Mic + Mix</option>
+              <option value="mic_mix_cam">Mic + Mix + Webcam</option>
+              <option value="mic_cam">Mic + Webcam</option>
+            </select>
+          </label>
+          <label>
+            Video format
+            <select id="videoFormatSelect">
+              <option value="social" selected>Social / High Quality</option>
+              <option value="standard">Standard Web Video</option>
+            </select>
+          </label>
+          <label>
+            Camera frame
+            <select id="videoOrientationSelect">
+              <option value="portrait" selected>Portrait 9:16</option>
+              <option value="landscape">Landscape 16:9</option>
+            </select>
+          </label>
+          <label>
+            Mic / Record Gain (dB)
+            <input id="recordGain" type="range" min="-24" max="24" step="1" value="0" />
+          </label>
+          <div class="gain-readout"><span id="recordGainValue">+0 dB</span></div>
         </div>
-
+        <div class="row wrap led-button-row unified-record-actions">
+          <button id="recordBtn" disabled>Record</button>
+          <button id="stopRecordBtn" disabled>Stop</button>
+          <button id="replayBtn" disabled>Replay</button>
+          <button id="downloadWavBtn" disabled>Download</button>
+          <button id="resetRecordingBtn" class="secondary" disabled>Reset / Clear</button>
+        </div>
+        <p class="small recording-note">Choose audio only or a camera-assisted take. Portrait 9:16 is ideal for phone sharing, while landscape 16:9 fits traditional audition videos.</p>
       </div>
     </section>
 
