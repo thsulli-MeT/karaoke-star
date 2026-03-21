@@ -100,6 +100,7 @@ let customBgUrl = "";
 
 const params = new URLSearchParams(window.location.search);
 const API_BASE = (params.get("apiBase") || "").replace(/\/$/, "");
+accessCodeInput.value = "";
 const DEMO_CODES = {
   TryLevel2: "patreon_l2_demo",
 };
@@ -169,7 +170,7 @@ async function verifySession() {
     unlockApp(data.tier || "member");
   } catch {
     lockApp();
-    gateStatus.textContent = "Gateway offline. Start: node side-chain/access-gateway.js";
+    gateStatus.textContent = "The room is offline right now. Check your access and try again soon.";
     demoUnlockBtn.hidden = false;
   }
 }
@@ -203,7 +204,7 @@ async function unlockWithCode() {
     unlockApp(data.tier);
   } catch (err) {
     console.error(err);
-    gateStatus.textContent = "Server unavailable. Start: node side-chain/access-gateway.js";
+    gateStatus.textContent = "That room is still locked. Check your access and try again.";
     demoUnlockBtn.hidden = false;
     unlockBtn.disabled = false;
   }
@@ -213,10 +214,10 @@ function unlockDemoMode() {
   const code = accessCodeInput.value.trim();
   const tier = DEMO_CODES[code];
   if (!tier) {
-    gateStatus.textContent = "Demo mode accepts TryLevel2.";
+    gateStatus.textContent = "That code did not open the room.";
     return;
   }
-  gateStatus.textContent = `Demo mode enabled (${tier}).`;
+  gateStatus.textContent = "Offline access granted. Welcome in.";
   unlockApp(tier);
 }
 
