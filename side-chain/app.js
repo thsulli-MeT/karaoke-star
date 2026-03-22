@@ -89,6 +89,7 @@ let micAnalyser;
 let micData;
 let meterLoop;
 let currentSong;
+let smoothedMicLevel = 0;
 let sessionScore = 0;
 let isPaused = false;
 
@@ -96,6 +97,7 @@ let recCtx;
 let recDestination;
 let recMicGain;
 let recLeadGain;
+let recInstGain;
 let recMicLow;
 let recMicMid;
 let recMicHigh;
@@ -277,11 +279,19 @@ function getMicLevel() {
   return Math.min(1, Math.sqrt(sumSquares / micData.length) * 4.2);
 }
 
-function computeLeadVolume(mode, micLevel) {
-  const modeBase = { practice: 1.0, light: 0.8, medium: 0.6, ghost: 0.2, solo: 0.0 };
-  const base = modeBase[mode] ?? 1.0;
-  if (mode === "practice" || mode === "solo") return base;
-  return Math.max(0, base - micLevel * 0.5);
+function getBlendState(mode, micLevel) {
+  const blendMap = {
+    practice: { guideBase: 1.0, duck: 0.08, guideFloor: 0.8, instBase: 0.9, instLift: 0.05, micLift: 1.05 },
+    light: { guideBase: 0.82, duck: 0.26, guideFloor: 0.34, instBase: 0.92, instLift: 0.1, micLift: 1.12 },
+    medium: { guideBase: 0.62, duck: 0.42, guideFloor: 0.18, instBase: 0.94, instLift: 0.14, micLift: 1.18 },
+    ghost: { guideBase: 0.28, duck: 0.5, guideFloor: 0.06, instBase: 0.97, instLift: 0.16, micLift: 1.22 },
+    solo: { guideBase: 0.02, duck: 0.15, guideFloor: 0, instBase: 1.0, instLift: 0.08, micLift: 1.24 },
+  };
+  const profile = blendMap[mode] || blendMap.practice;
+  const guideLevel = Math.max(profile.guideFloor, profile.guideBase - micLevel * profile.duck);
+  const instrumentalLevel = Math.min(1.15, profile.instBase + micLevel * profile.instLift);
+  const micPresenceGain = profile.micLift + micLevel * 0.24;
+  return { guideLevel, instrumentalLevel, micPresenceGain };
 }
 
 function makeDriveCurve(amount = 0) {
@@ -369,17 +379,24 @@ function applyCustomBackground() {
   setStatus(`Applied custom background: ${file.name}`);
 }
 
-function updateRecordingMixGains() {
-  if (!recLeadGain || !recMicGain) return;
-  recLeadGain.gain.value = computeLeadVolume(modeSelect.value, getMicLevel());
-  recMicGain.gain.value = dbToGain(Number(recordGain.value));
+function updateRecordingMixGains(micLevel = smoothedMicLevel) {
+  if (!recLeadGain || !recMicGain || !recInstGain) return;
+  const blend = getBlendState(modeSelect.value, micLevel);
+  recLeadGain.gain.value = blend.guideLevel;
+  recInstGain.gain.value = blend.instrumentalLevel;
+  recMicGain.gain.value = dbToGain(Number(recordGain.value)) * blend.micPresenceGain;
 }
 
 function tickMeters() {
-  const micLevel = getMicLevel();
-  const leadLevel = computeLeadVolume(modeSelect.value, micLevel);
+  const rawMicLevel = getMicLevel();
+  smoothedMicLevel = smoothedMicLevel * 0.72 + rawMicLevel * 0.28;
+  const blend = getBlendState(modeSelect.value, smoothedMicLevel);
+  const leadLevel = blend.guideLevel;
   leadAudio.volume = leadLevel;
-  updateRecordingMixGains();
+  backingAudio.volume = blend.instrumentalLevel;
+  updateRecordingMixGains(smoothedMicLevel);
+
+  const micLevel = smoothedMicLevel;
 
   const micPct = Math.round(micLevel * 100);
   const leadPct = Math.round(leadLevel * 100);
@@ -401,7 +418,7 @@ function tickMeters() {
 
 function applyMicGain() {
   recordGainValue.textContent = formatDb(recordGain.value);
-  if (recMicGain) recMicGain.gain.value = dbToGain(Number(recordGain.value));
+  updateRecordingMixGains(smoothedMicLevel);
 }
 
 async function setupRecordingBus() {
@@ -414,7 +431,7 @@ async function setupRecordingBus() {
   const recMicSource = recCtx.createMediaStreamSource(micStream);
 
   recLeadGain = recCtx.createGain();
-  const recInstGain = recCtx.createGain();
+  recInstGain = recCtx.createGain();
   recMicGain = recCtx.createGain();
 
   recMicLow = recCtx.createBiquadFilter();
@@ -476,9 +493,11 @@ function loadSong(song) {
   backingAudio.load();
 
   sessionScore = 0;
+  smoothedMicLevel = 0;
   scoreMeter.style.width = "0%";
   scoreValue.textContent = "0";
   scoreDigits.textContent = "000000";
+  backingAudio.volume = 1;
   resetMeters();
 
   playBtn.disabled = !micStream;
@@ -538,6 +557,7 @@ function stop() {
     meterLoop = null;
   }
   resetMeters();
+  backingAudio.volume = 1;
   setStatus("Stopped.");
 }
 
