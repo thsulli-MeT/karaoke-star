@@ -224,6 +224,9 @@ button:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
 }
 .side-preview { min-height: 420px; }
 .webcam-side-cell { display: grid; gap: 12px; align-content: start; }
+.webcam-side-cell.webcam-live .webcam-placeholder { display: none; }
+.webcam-side-cell.webcam-live .webcam-preview[hidden],
+.webcam-side-cell.webcam-live #webcamLiveNote[hidden] { display: block; }
 .webcam-placeholder { display: grid; gap: 12px; }
 .webcam-placeholder iframe {
   width: 100%;
@@ -404,6 +407,14 @@ code {
   border-radius: 12px;
   padding: 14px;
   background: rgba(20, 26, 49, 0.65);
+}
+.promo-video-embed { margin: 14px 0; }
+.promo-video-embed iframe {
+  width: 100%;
+  min-height: 260px;
+  border: 1px solid rgba(101, 138, 255, 0.35);
+  border-radius: 16px;
+  background: #050814;
 }
 
 @media (max-width: 980px) {

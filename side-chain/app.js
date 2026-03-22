@@ -56,6 +56,7 @@ const stopRecordBtn = document.getElementById("stopRecordBtn");
 const replayBtn = document.getElementById("replayBtn");
 const downloadWavBtn = document.getElementById("downloadWavBtn");
 const resetRecordingBtn = document.getElementById("resetRecordingBtn");
+const webcamSideCell = document.getElementById("webcamSideCell");
 const webcamPreview = document.getElementById("webcamPreview");
 const webcamPlaceholder = document.getElementById("webcamPlaceholder");
 const webcamLiveNote = document.getElementById("webcamLiveNote");
@@ -541,12 +542,14 @@ function stop() {
 }
 
 function showPromoPlaceholder() {
+  webcamSideCell.classList.remove("webcam-live");
   webcamPlaceholder.hidden = false;
   webcamPreview.hidden = true;
   webcamLiveNote.hidden = true;
 }
 
 function showLiveWebcam() {
+  webcamSideCell.classList.add("webcam-live");
   webcamPlaceholder.hidden = true;
   webcamPreview.hidden = false;
   webcamLiveNote.hidden = false;
@@ -748,11 +751,6 @@ async function downloadRecording() {
   if (recordingKind === "audio") {
     return downloadWav();
   }
-}
-
-function buildAuditionStream() {
-  if (!webcamStream) throw new Error("Enable webcam first.");
-  if (!recDestination) throw new Error("Enable mic first before recording audition video.");
 
   const extension = recordingBlob.type.includes("mp4") ? "mp4" : "webm";
   const filename = `${sanitizeForFilename(currentSong?.title || "side-chain-audition")}_${videoOrientationSelect.value}.${extension}`;
