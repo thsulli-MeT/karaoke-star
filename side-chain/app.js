@@ -500,8 +500,8 @@ async function setupRecordingBus() {
   recCtx = new (window.AudioContext || window.webkitAudioContext)();
   recDestination = recCtx.createMediaStreamDestination();
 
-  const recLeadSource = recCtx.createMediaStreamSource(leadAudio.captureStream());
-  const recInstSource = recCtx.createMediaStreamSource(backingAudio.captureStream());
+  const recLeadSource = recCtx.createMediaElementSource(leadAudio);
+  const recInstSource = recCtx.createMediaElementSource(backingAudio);
   const recMicSource = recCtx.createMediaStreamSource(micStream);
 
   recLeadGain = recCtx.createGain();
@@ -559,6 +559,13 @@ function resetMeters() {
   leadValue.textContent = "0";
 }
 
+function resetSessionScore() {
+  sessionScore = 0;
+  scoreMeter.style.width = "0%";
+  scoreValue.textContent = "0";
+  scoreDigits.textContent = "000000";
+}
+
 function loadSong(song) {
   currentSong = song;
   leadAudio.src = song.lead;
@@ -566,11 +573,8 @@ function loadSong(song) {
   leadAudio.load();
   backingAudio.load();
 
-  sessionScore = 0;
   smoothedMicLevel = 0;
-  scoreMeter.style.width = "0%";
-  scoreValue.textContent = "0";
-  scoreDigits.textContent = "000000";
+  resetSessionScore();
   backingAudio.volume = 1;
   resetMeters();
 
@@ -589,6 +593,14 @@ function loadSong(song) {
 
 function play() {
   if (!currentSong) return setStatus("Pick a song first.");
+
+  if (!isPaused && leadAudio.currentTime < 0.05 && backingAudio.currentTime < 0.05) {
+    smoothedMicLevel = 0;
+    resetSessionScore();
+  }
+
+  if (recCtx?.state === "suspended") recCtx.resume().catch(() => {});
+
   Promise.all([leadAudio.play(), backingAudio.play()])
     .then(() => {
       if (!meterLoop) tickMeters();
@@ -611,10 +623,28 @@ function pause() {
     backingAudio.pause();
     isPaused = true;
     pauseBtn.textContent = "Resume";
+    if (meterLoop) {
+      cancelAnimationFrame(meterLoop);
+      meterLoop = null;
+    }
     setStatus("Paused.");
   } else {
     play();
   }
+}
+
+function handleTrackEnded() {
+  leadAudio.pause();
+  backingAudio.pause();
+  isPaused = false;
+  pauseBtn.textContent = "Pause";
+  pauseBtn.disabled = true;
+  stopBtn.disabled = true;
+  if (meterLoop) {
+    cancelAnimationFrame(meterLoop);
+    meterLoop = null;
+  }
+  setStatus("Song finished. Press Play to restart the score.");
 }
 
 function stop() {
@@ -632,7 +662,7 @@ function stop() {
   }
   resetMeters();
   backingAudio.volume = 1;
-  setStatus("Stopped.");
+  setStatus("Stopped. Press Play to restart the score.");
 }
 
 function showPromoPlaceholder() {
@@ -764,6 +794,7 @@ async function startRecording() {
   if (mediaRecorder?.state === "recording") return;
 
   const mode = getCaptureMode();
+  if (recCtx?.state === "suspended") await recCtx.resume().catch(() => {});
   let streamInfo;
   try {
     streamInfo = await buildRecordingStream(mode);
@@ -904,6 +935,8 @@ enableCamBtn.addEventListener("click", () => {
 playBtn.addEventListener("click", play);
 pauseBtn.addEventListener("click", pause);
 stopBtn.addEventListener("click", stop);
+leadAudio.addEventListener("ended", handleTrackEnded);
+backingAudio.addEventListener("ended", handleTrackEnded);
 recordBtn.addEventListener("click", startRecording);
 stopRecordBtn.addEventListener("click", stopRecording);
 replayBtn.addEventListener("click", replayRecording);
