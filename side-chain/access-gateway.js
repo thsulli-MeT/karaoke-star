@@ -11,8 +11,7 @@ const SESSION_SECRET = process.env.SESSION_SECRET || 'change-this-secret-in-prod
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 
 const defaultCodes = [
-  { code: 'L2-DEMO-2026', tier: 'patreon_l2', label: 'Demo Patreon L2' },
-  { code: 'PROMO-GUEST-2026', tier: 'promo', label: 'Demo Promo' },
+  { code: 'TryLevel2', tier: 'patreon_l2', label: 'Current Side-Chain access code' },
 ];
 
 const sessions = new Map();
