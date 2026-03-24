@@ -19,6 +19,15 @@ const dropInSongs = [
     lead: "../a-little-confidence/0 Lead Vocals_01.mp3",
     instrumental: "../a-little-confidence/1 Instrumental_01.mp3",
     artwork: "../a-little-confidence/cover.jpg",
+    artworkCandidates: [
+      "../a-little-confidence/cover.jpg",
+      "../a-little-confidence/cover.jpeg",
+      "../a-little-confidence/cover.png",
+      "../a-little-confidence/A Little Confidence.jpg",
+      "../a-little-confidence/A Little Confidence.jpeg",
+      "../a-little-confidence/A Little Confidence.png",
+      "../a-little-confidence/ks-app-banner.jpg",
+    ],
   },
 ];
 
@@ -363,6 +372,32 @@ function updateMicToneChain() {
   eqReadout.textContent = `Low ${eqLow.value} dB • Mid ${eqMid.value} dB • High ${eqHigh.value} dB • Auto Tune Assist ${autoTune.value}%`;
 }
 
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(url);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+async function resolveSongArtwork(song) {
+  if (!song) return "";
+  if (song.resolvedArtwork) return song.resolvedArtwork;
+
+  const candidates = [song.artwork, ...(song.artworkCandidates || [])].filter(Boolean);
+  for (const candidate of candidates) {
+    try {
+      const okUrl = await loadImage(candidate);
+      song.resolvedArtwork = okUrl;
+      return okUrl;
+    } catch {
+      // try next candidate
+    }
+  }
+  return "";
+}
+
 function setBackgroundPreset(preset) {
   document.body.style.backgroundImage = "";
   document.body.classList.remove("bg-electric-grid", "bg-rain-fern", "bg-starfield", "bg-light-phenomena");
@@ -377,15 +412,16 @@ function setBackgroundPreset(preset) {
   bgFx.className = `bg-fx ${fxClass}`;
 }
 
-function applySongArtworkBackground(song) {
-  if (!song?.artwork) return;
+async function applySongArtworkBackground(song) {
+  const artworkUrl = await resolveSongArtwork(song);
+  if (!artworkUrl) return;
   if (customBgUrl) {
     URL.revokeObjectURL(customBgUrl);
     customBgUrl = "";
   }
   document.body.classList.remove("bg-electric-grid", "bg-rain-fern", "bg-starfield", "bg-light-phenomena");
   bgFx.className = "bg-fx";
-  document.body.style.backgroundImage = `linear-gradient(rgba(6, 8, 14, 0.46), rgba(6, 8, 14, 0.46)), url('${song.artwork}')`;
+  document.body.style.backgroundImage = `linear-gradient(rgba(6, 8, 14, 0.46), rgba(6, 8, 14, 0.46)), url('${artworkUrl}')`;
   document.body.style.backgroundSize = "cover";
   document.body.style.backgroundPosition = "center";
 }
@@ -464,8 +500,8 @@ async function setupRecordingBus() {
   recCtx = new (window.AudioContext || window.webkitAudioContext)();
   recDestination = recCtx.createMediaStreamDestination();
 
-  const recLeadSource = recCtx.createMediaStreamSource(leadAudio.captureStream());
-  const recInstSource = recCtx.createMediaStreamSource(backingAudio.captureStream());
+  const recLeadSource = recCtx.createMediaElementSource(leadAudio);
+  const recInstSource = recCtx.createMediaElementSource(backingAudio);
   const recMicSource = recCtx.createMediaStreamSource(micStream);
 
   recLeadGain = recCtx.createGain();
@@ -523,6 +559,13 @@ function resetMeters() {
   leadValue.textContent = "0";
 }
 
+function resetSessionScore() {
+  sessionScore = 0;
+  scoreMeter.style.width = "0%";
+  scoreValue.textContent = "0";
+  scoreDigits.textContent = "000000";
+}
+
 function loadSong(song) {
   currentSong = song;
   leadAudio.src = song.lead;
@@ -530,11 +573,8 @@ function loadSong(song) {
   leadAudio.load();
   backingAudio.load();
 
-  sessionScore = 0;
   smoothedMicLevel = 0;
-  scoreMeter.style.width = "0%";
-  scoreValue.textContent = "0";
-  scoreDigits.textContent = "000000";
+  resetSessionScore();
   backingAudio.volume = 1;
   resetMeters();
 
@@ -544,7 +584,7 @@ function loadSong(song) {
   recordBtn.disabled = !micStream;
 
   if (useSongArtToggle.checked && song.artwork) {
-    applySongArtworkBackground(song);
+    applySongArtworkBackground(song).catch(() => {});
   }
 
   loadLyricsForCurrentSong();
@@ -553,6 +593,14 @@ function loadSong(song) {
 
 function play() {
   if (!currentSong) return setStatus("Pick a song first.");
+
+  if (!isPaused && leadAudio.currentTime < 0.05 && backingAudio.currentTime < 0.05) {
+    smoothedMicLevel = 0;
+    resetSessionScore();
+  }
+
+  if (recCtx?.state === "suspended") recCtx.resume().catch(() => {});
+
   Promise.all([leadAudio.play(), backingAudio.play()])
     .then(() => {
       if (!meterLoop) tickMeters();
@@ -575,10 +623,28 @@ function pause() {
     backingAudio.pause();
     isPaused = true;
     pauseBtn.textContent = "Resume";
+    if (meterLoop) {
+      cancelAnimationFrame(meterLoop);
+      meterLoop = null;
+    }
     setStatus("Paused.");
   } else {
     play();
   }
+}
+
+function handleTrackEnded() {
+  leadAudio.pause();
+  backingAudio.pause();
+  isPaused = false;
+  pauseBtn.textContent = "Pause";
+  pauseBtn.disabled = true;
+  stopBtn.disabled = true;
+  if (meterLoop) {
+    cancelAnimationFrame(meterLoop);
+    meterLoop = null;
+  }
+  setStatus("Song finished. Press Play to restart the score.");
 }
 
 function stop() {
@@ -596,7 +662,7 @@ function stop() {
   }
   resetMeters();
   backingAudio.volume = 1;
-  setStatus("Stopped.");
+  setStatus("Stopped. Press Play to restart the score.");
 }
 
 function showPromoPlaceholder() {
@@ -728,6 +794,7 @@ async function startRecording() {
   if (mediaRecorder?.state === "recording") return;
 
   const mode = getCaptureMode();
+  if (recCtx?.state === "suspended") await recCtx.resume().catch(() => {});
   let streamInfo;
   try {
     streamInfo = await buildRecordingStream(mode);
@@ -851,7 +918,7 @@ applyCustomBgBtn.addEventListener("click", applyCustomBackground);
 useSongArtToggle.addEventListener("change", () => {
   if (!currentSong) return;
   if (useSongArtToggle.checked && currentSong.artwork) {
-    applySongArtworkBackground(currentSong);
+    applySongArtworkBackground(currentSong).catch(() => {});
   } else {
     setBackgroundPreset(bgPresetSelect.value || "electric");
   }
@@ -868,6 +935,8 @@ enableCamBtn.addEventListener("click", () => {
 playBtn.addEventListener("click", play);
 pauseBtn.addEventListener("click", pause);
 stopBtn.addEventListener("click", stop);
+leadAudio.addEventListener("ended", handleTrackEnded);
+backingAudio.addEventListener("ended", handleTrackEnded);
 recordBtn.addEventListener("click", startRecording);
 stopRecordBtn.addEventListener("click", stopRecording);
 replayBtn.addEventListener("click", replayRecording);
