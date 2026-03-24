@@ -277,27 +277,9 @@ function unlockDemoMode() {
 }
 
 
-async function assetExists(url) {
-  try {
-    const headResp = await fetch(url, { method: "HEAD" });
-    if (headResp.ok) return true;
-  } catch {
-    // fall through to GET probe
-  }
-
-  try {
-    const resp = await fetch(url, { method: "GET" });
-    return resp.ok;
-  } catch {
-    return false;
-  }
-}
-
-async function registerDropInSongs() {
+function registerDropInSongs() {
   for (const song of dropInSongs) {
-    if (builtInSongs.some((entry) => entry.title === song.title)) continue;
-    const [leadOk, instOk] = await Promise.all([assetExists(song.lead), assetExists(song.instrumental)]);
-    if (leadOk && instOk) builtInSongs.push(song);
+    if (!builtInSongs.some((entry) => entry.title === song.title)) builtInSongs.push(song);
   }
 }
 
@@ -934,9 +916,6 @@ lyricsSongLabel.textContent = "Lyrics: (none loaded)";
 demoUnlockBtn.hidden = true;
 refreshResetRecordingButton();
 verifySession();
-registerDropInSongs()
-  .catch((err) => console.error("Drop-in song scan failed", err))
-  .finally(() => {
-    hydrateSongMenu();
-    loadSong(builtInSongs[0]);
-  });
+registerDropInSongs();
+hydrateSongMenu();
+loadSong(builtInSongs[0]);

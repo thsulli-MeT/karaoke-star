@@ -1,6 +1,6 @@
 # A Little Confidence drop-in song files
 
-Place these files in this folder to have Side-Chain automatically add **A Little Confidence** to the built-in song menu on app load:
+Side-Chain now always shows **A Little Confidence** in the built-in song menu. Place these files in this folder so the song can actually play when selected:
 
 - `0 Lead Vocals_01.mp3`
 - `1 Instrumental_01.mp3`
