@@ -13,6 +13,15 @@ const builtInSongs = [
   },
 ];
 
+const dropInSongs = [
+  {
+    title: "A Little Confidence",
+    lead: "../a-little-confidence/0 Lead Vocals_01.mp3",
+    instrumental: "../a-little-confidence/1 Instrumental_01.mp3",
+    artwork: "../a-little-confidence/cover.jpg",
+  },
+];
+
 const appRoot = document.getElementById("appRoot");
 const accessGate = document.getElementById("accessGate");
 const accessCodeInput = document.getElementById("accessCodeInput");
@@ -168,6 +177,15 @@ const DEFAULT_LYRICS = {
     "",
     "If i've learned anything, at this point, it is, you cant ,always ,judge a book by its cover, what’s under the skin is so hard to imagine, when you can't look past, the stereotype, lets try and that break that trend, and let all the people shout, Here’s what Im gonna do , Gonna, Pour it out, and you are in on it, Gonna, Pour it out, Gonna, Pour it out, Gonna, Pour it out,",
   ].join("\n"),
+  "A Little Confidence": [
+    "It’s Up for grabs, watch out, im getting, a little confidence, ya know, that is a dangerous situation, like a drug, i’m gonna want, some more, Anything is possible, with a little more, confidence, been there, done that, that's why, at this stage, its not surprising, i am still trying, to get some, ya know, loving, money, fall into, the lap, of luxury, ah, she’s so hot, with just a little more, a little more, confidence, ya know, this is becoming, a dangerous situation, with just a little more, a little more, confidence, this could go off",
+    "",
+    "I'm gonna have to put you, on hold, i just saw a model, extremely hot, VERSION, from my future, let’s see what, I can do with it, ya know, a little more, confidence, lets keep on pushing, it, ya know what, that’s it, don't quit, pumping, pumping, it in, ah yeah, its on now, I figured out the equation to gaining, all the world’s love, with a little more confidence what could we do then, ah bend the rules, just this one time so i can slide on in, i like I did back, in the day, when the bouncer, was my buddy, it’s happening, again with a little more confidence, with a little more confidence this could be, a big hit, for this here boy, yeah boy,",
+    "",
+    "Listen closely, to this rambling, from a mad man, who’s, off the charts, on his way, up, to the stars, who know, maybe with a little luck I might just do it, the right way, ah yeah dont forget karma, baby, ya owe me, time, to pay up, I’ll take this as far as I can go, with a little more confidence, I think I could rule the school, I’m bored, let all the kids out of class, let em dance, in the big gym, with alittle more, aitel more confidence, we could all be winners, not like them losers, not cuttin, me down",
+    "",
+    "Last time I felt this good, was when, i ran of out, of that medication they wanted to put me on, but now that I found this rhythm, this blend, I think I got this, on my own, but I'm searching far and wide, for some all stars, to be in my band, of merry men, and oh oh don't forget the ladies, the coming in, from all directions, now that I picked up, from where i left off, before before I took that turn, and went back home, I had to to do it, all, to get to this point, now i’m in, in my, my element, anything is possible, yes way, with a little more, with a little more confidence, Baby, Baby, baby, its here, to stay,",
+  ].join("\n"),
 };
 
 
@@ -258,6 +276,30 @@ function unlockDemoMode() {
   unlockApp(tier);
 }
 
+
+async function assetExists(url) {
+  try {
+    const headResp = await fetch(url, { method: "HEAD" });
+    if (headResp.ok) return true;
+  } catch {
+    // fall through to GET probe
+  }
+
+  try {
+    const resp = await fetch(url, { method: "GET" });
+    return resp.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function registerDropInSongs() {
+  for (const song of dropInSongs) {
+    if (builtInSongs.some((entry) => entry.title === song.title)) continue;
+    const [leadOk, instOk] = await Promise.all([assetExists(song.lead), assetExists(song.instrumental)]);
+    if (leadOk && instOk) builtInSongs.push(song);
+  }
+}
 
 function loadLyricsForCurrentSong() {
   if (!currentSong) {
@@ -889,8 +931,12 @@ applyMicGain();
 updateMicToneChain();
 scoreDigits.textContent = "000000";
 lyricsSongLabel.textContent = "Lyrics: (none loaded)";
-hydrateSongMenu();
-loadSong(builtInSongs[0]);
 demoUnlockBtn.hidden = true;
 refreshResetRecordingButton();
 verifySession();
+registerDropInSongs()
+  .catch((err) => console.error("Drop-in song scan failed", err))
+  .finally(() => {
+    hydrateSongMenu();
+    loadSong(builtInSongs[0]);
+  });
