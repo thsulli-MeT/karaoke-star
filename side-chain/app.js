@@ -26,6 +26,12 @@ const dropInSongs = [
       "../a-little-confidence/A Little Confidence.jpg",
       "../a-little-confidence/A Little Confidence.jpeg",
       "../a-little-confidence/A Little Confidence.png",
+      "../a-little-confidence/A LITTLE CONFIDENCE.jpg",
+      "../a-little-confidence/A LITTLE CONFIDENCE.jpeg",
+      "../a-little-confidence/A LITTLE CONFIDENCE.png",
+      "../a-little-confidence/a-little-confidence.jpg",
+      "../a-little-confidence/a-little-confidence.jpeg",
+      "../a-little-confidence/a-little-confidence.png",
       "../a-little-confidence/ks-app-banner.jpg",
     ],
   },
@@ -521,8 +527,14 @@ async function setupRecordingBus() {
   recMicComp = recCtx.createDynamicsCompressor();
   recMicShape = recCtx.createWaveShaper();
 
-  recLeadSource.connect(recLeadGain).connect(recDestination);
-  recInstSource.connect(recInstGain).connect(recDestination);
+  recLeadSource.connect(recLeadGain);
+  recLeadGain.connect(recDestination);
+  recLeadGain.connect(recCtx.destination);
+
+  recInstSource.connect(recInstGain);
+  recInstGain.connect(recDestination);
+  recInstGain.connect(recCtx.destination);
+
   recMicSource.connect(recMicLow).connect(recMicMid).connect(recMicHigh).connect(recMicComp).connect(recMicShape).connect(recMicGain).connect(recDestination);
 
   updateMicToneChain();
@@ -858,12 +870,30 @@ function replayRecording() {
   if (recordingKind === "video") {
     el.muted = false;
     el.playsInline = true;
-    Object.assign(el.style, {
+
+    const shell = document.createElement("div");
+    Object.assign(shell.style, {
       position: "fixed", right: "16px", bottom: "16px", width: "min(360px, 88vw)", zIndex: 20,
       borderRadius: "16px", border: "1px solid rgba(120,150,255,0.45)", background: "#050814",
+      boxShadow: "0 12px 26px rgba(0,0,0,0.45)", padding: "10px",
     });
-    document.body.appendChild(el);
-    el.addEventListener("ended", () => el.remove(), { once: true });
+
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.textContent = "Close";
+    Object.assign(closeBtn.style, {
+      marginBottom: "8px", width: "auto", minWidth: "92px", padding: "8px 12px", borderRadius: "10px",
+    });
+
+    Object.assign(el.style, {
+      width: "100%", borderRadius: "12px", border: "1px solid rgba(120,150,255,0.35)", background: "#050814",
+    });
+
+    closeBtn.addEventListener("click", () => shell.remove());
+    shell.appendChild(closeBtn);
+    shell.appendChild(el);
+    document.body.appendChild(shell);
+    el.addEventListener("ended", () => shell.remove(), { once: true });
   }
   el.play().catch((err) => {
     console.error(err);
