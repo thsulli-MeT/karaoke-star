@@ -527,8 +527,14 @@ async function setupRecordingBus() {
   recMicComp = recCtx.createDynamicsCompressor();
   recMicShape = recCtx.createWaveShaper();
 
-  recLeadSource.connect(recLeadGain).connect(recDestination);
-  recInstSource.connect(recInstGain).connect(recDestination);
+  recLeadSource.connect(recLeadGain);
+  recLeadGain.connect(recDestination);
+  recLeadGain.connect(recCtx.destination);
+
+  recInstSource.connect(recInstGain);
+  recInstGain.connect(recDestination);
+  recInstGain.connect(recCtx.destination);
+
   recMicSource.connect(recMicLow).connect(recMicMid).connect(recMicHigh).connect(recMicComp).connect(recMicShape).connect(recMicGain).connect(recDestination);
 
   updateMicToneChain();
