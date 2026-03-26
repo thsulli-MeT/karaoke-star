@@ -35,6 +35,27 @@ const dropInSongs = [
       "../a-little-confidence/ks-app-banner.jpg",
     ],
   },
+  {
+    title: "Straight to the Point",
+    lead: "../straight-to-the-point/0 Lead Vocals_01.mp3",
+    instrumental: "../straight-to-the-point/1 Instrumental_01.mp3",
+    artwork: "../straight-to-the-point/cover.jpg",
+    artworkCandidates: [
+      "../straight-to-the-point/cover.jpg",
+      "../straight-to-the-point/cover.jpeg",
+      "../straight-to-the-point/cover.png",
+      "../straight-to-the-point/Straight to the Point.jpg",
+      "../straight-to-the-point/Straight to the Point.jpeg",
+      "../straight-to-the-point/Straight to the Point.png",
+      "../straight-to-the-point/STRAIGHT TO THE POINT.jpg",
+      "../straight-to-the-point/STRAIGHT TO THE POINT.jpeg",
+      "../straight-to-the-point/STRAIGHT TO THE POINT.png",
+      "../straight-to-the-point/straight-to-the-point.jpg",
+      "../straight-to-the-point/straight-to-the-point.jpeg",
+      "../straight-to-the-point/straight-to-the-point.png",
+      "../straight-to-the-point/ks-app-banner.jpg",
+    ],
+  },
 ];
 
 const appRoot = document.getElementById("appRoot");
@@ -200,6 +221,9 @@ const DEFAULT_LYRICS = {
     "Listen closely, to this rambling, from a mad man, who’s, off the charts, on his way, up, to the stars, who know, maybe with a little luck I might just do it, the right way, ah yeah dont forget karma, baby, ya owe me, time, to pay up, I’ll take this as far as I can go, with a little more confidence, I think I could rule the school, I’m bored, let all the kids out of class, let em dance, in the big gym, with alittle more, aitel more confidence, we could all be winners, not like them losers, not cuttin, me down",
     "",
     "Last time I felt this good, was when, i ran of out, of that medication they wanted to put me on, but now that I found this rhythm, this blend, I think I got this, on my own, but I'm searching far and wide, for some all stars, to be in my band, of merry men, and oh oh don't forget the ladies, the coming in, from all directions, now that I picked up, from where i left off, before before I took that turn, and went back home, I had to to do it, all, to get to this point, now i’m in, in my, my element, anything is possible, yes way, with a little more, with a little more confidence, Baby, Baby, baby, its here, to stay,",
+  ].join("\n"),
+  "Straight to the Point": [
+    "",
   ].join("\n"),
 };
 
