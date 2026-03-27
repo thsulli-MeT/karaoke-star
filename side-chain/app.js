@@ -56,6 +56,27 @@ const dropInSongs = [
       "../straight-to-the-point/ks-app-banner.jpg",
     ],
   },
+  {
+    title: "All The Glows",
+    lead: "../all-the-glows/0 Lead Vocals_01.mp3",
+    instrumental: "../all-the-glows/1 Instrumental_01.mp3",
+    artwork: "../all-the-glows/cover.jpg",
+    artworkCandidates: [
+      "../all-the-glows/cover.jpg",
+      "../all-the-glows/cover.jpeg",
+      "../all-the-glows/cover.png",
+      "../all-the-glows/All The Glows.jpg",
+      "../all-the-glows/All The Glows.jpeg",
+      "../all-the-glows/All The Glows.png",
+      "../all-the-glows/ALL THE GLOWS.jpg",
+      "../all-the-glows/ALL THE GLOWS.jpeg",
+      "../all-the-glows/ALL THE GLOWS.png",
+      "../all-the-glows/all-the-glows.jpg",
+      "../all-the-glows/all-the-glows.jpeg",
+      "../all-the-glows/all-the-glows.png",
+      "../all-the-glows/ks-app-banner.jpg",
+    ],
+  },
 ];
 
 const appRoot = document.getElementById("appRoot");
@@ -223,7 +244,22 @@ const DEFAULT_LYRICS = {
     "Last time I felt this good, was when, i ran of out, of that medication they wanted to put me on, but now that I found this rhythm, this blend, I think I got this, on my own, but I'm searching far and wide, for some all stars, to be in my band, of merry men, and oh oh don't forget the ladies, the coming in, from all directions, now that I picked up, from where i left off, before before I took that turn, and went back home, I had to to do it, all, to get to this point, now i’m in, in my, my element, anything is possible, yes way, with a little more, with a little more confidence, Baby, Baby, baby, its here, to stay,",
   ].join("\n"),
   "Straight to the Point": [
+    "Lets get , straight to the point, why do we need to keep beating around the bush, I can tell you have something on your mind so lets get it off your chest and lay it all out, lets get, straight, to the point, straight to the point",
     "",
+    "Don't see a reason to put this off, any longer, procrastinate, nah, not today, its time to play, Him, Hmmm, oh oh oh, see what I'm Saying Is, lets get, straight, to the point, straight to the point, here we go",
+    "",
+    "Wanna get rowdy, while barley, making a sound, let's not get confused here, we gotta keep it down, cowboy, we got, time now, its all night, lets get, straight, to the point, straight to the point, here we go",
+    "",
+    "Just looked up and caught myself doing it again got all wrapped up in you and lost it, lost all control, that's why I keep on coming back , and back and back for more, lets get, straight, to the point, straight to the point, we go",
+  ].join("\n"),
+  "All The Glows": [
+    "eflecting, about , All the glows, all that smoke, just doesn't seem right, had to go through that fight, to prove what, i had a heart, a soul, made of steel, doesn't seem real, all the glows, coming from me now, all the glows, proving, yep its real.",
+    "",
+    "Stepping up, hell, i'm steppin out , of the shadows, its what i prefer, can't i live that way, bro, i am this way, all the glows, coming my way, all the glows showing, it's my night to shine, all the glows, all the glows",
+    "",
+    "Day dreams, they come to me at night when I m trying to sleep, they keep on waking me, all the glows, keeping on wanting me, to accept, the way it is now, all the glows, only tell part of the story, i'm in hurry. otherwise i'd tell you all about it, all the glows, all the glows",
+    "",
+    "Since you insist I'll break down one tiny little inconsequential part, to help, you get it, right, the glows, I'm not just rambling again, its real, all the glows, all the glows, coming , coming for me,  so I can tell you, its real, I love,    all the glows, all the glows",
   ].join("\n"),
 };
 
