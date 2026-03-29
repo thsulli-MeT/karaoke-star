@@ -17,7 +17,15 @@ const dropInSongs = [
   {
     title: "A Little Confidence",
     lead: "../a-little-confidence/0 Lead Vocals_01.mp3",
+    leadCandidates: [
+      "../a-little-confidence/0 Lead Vocals_01.mp3",
+      "../a-little-confidence/0 Lead Vocals.mp3",
+    ],
     instrumental: "../a-little-confidence/1 Instrumental_01.mp3",
+    instrumentalCandidates: [
+      "../a-little-confidence/1 Instrumental_01.mp3",
+      "../a-little-confidence/1 Instrumental.mp3",
+    ],
     artwork: "../a-little-confidence/cover.jpg",
     artworkCandidates: [
       "../a-little-confidence/cover.jpg",
@@ -38,7 +46,15 @@ const dropInSongs = [
   {
     title: "Straight to the Point",
     lead: "../straight-to-the-point/0 Lead Vocals_01.mp3",
+    leadCandidates: [
+      "../straight-to-the-point/0 Lead Vocals_01.mp3",
+      "../straight-to-the-point/0 Lead Vocals.mp3",
+    ],
     instrumental: "../straight-to-the-point/1 Instrumental_01.mp3",
+    instrumentalCandidates: [
+      "../straight-to-the-point/1 Instrumental_01.mp3",
+      "../straight-to-the-point/1 Instrumental.mp3",
+    ],
     artwork: "../straight-to-the-point/cover.jpg",
     artworkCandidates: [
       "../straight-to-the-point/cover.jpg",
@@ -59,7 +75,15 @@ const dropInSongs = [
   {
     title: "All The Glows",
     lead: "../all-the-glows/0 Lead Vocals_01.mp3",
+    leadCandidates: [
+      "../all-the-glows/0 Lead Vocals_01.mp3",
+      "../all-the-glows/0 Lead Vocals.mp3",
+    ],
     instrumental: "../all-the-glows/1 Instrumental_01.mp3",
+    instrumentalCandidates: [
+      "../all-the-glows/1 Instrumental_01.mp3",
+      "../all-the-glows/1 Instrumental.mp3",
+    ],
     artwork: "../all-the-glows/cover.jpg",
     artworkCandidates: [
       "../all-the-glows/cover.jpg",
@@ -447,6 +471,36 @@ function loadImage(url) {
   });
 }
 
+function loadAudioMetadata(url) {
+  return new Promise((resolve, reject) => {
+    const audio = new Audio();
+    audio.preload = "metadata";
+    audio.onloadedmetadata = () => resolve(url);
+    audio.onerror = () => reject(new Error(`Unable to load audio metadata: ${url}`));
+    audio.src = url;
+  });
+}
+
+async function resolveSongAudioSource(song, kind) {
+  if (!song) return "";
+  const cacheKey = kind === "lead" ? "resolvedLead" : "resolvedInstrumental";
+  if (song[cacheKey]) return song[cacheKey];
+
+  const base = kind === "lead" ? song.lead : song.instrumental;
+  const candidates = [base, ...((kind === "lead" ? song.leadCandidates : song.instrumentalCandidates) || [])].filter(Boolean);
+  for (const candidate of candidates) {
+    try {
+      const okUrl = await loadAudioMetadata(candidate);
+      song[cacheKey] = okUrl;
+      return okUrl;
+    } catch {
+      // try next candidate
+    }
+  }
+
+  return base || "";
+}
+
 async function resolveSongArtwork(song) {
   if (!song) return "";
   if (song.resolvedArtwork) return song.resolvedArtwork;
@@ -638,10 +692,19 @@ function resetSessionScore() {
   scoreDigits.textContent = "000000";
 }
 
-function loadSong(song) {
+let loadSongRequestId = 0;
+
+async function loadSong(song) {
+  const requestId = ++loadSongRequestId;
   currentSong = song;
-  leadAudio.src = song.lead;
-  backingAudio.src = song.instrumental;
+  const [leadSrc, instSrc] = await Promise.all([
+    resolveSongAudioSource(song, "lead"),
+    resolveSongAudioSource(song, "instrumental"),
+  ]);
+  if (requestId !== loadSongRequestId) return;
+
+  leadAudio.src = leadSrc;
+  backingAudio.src = instSrc;
   leadAudio.load();
   backingAudio.load();
 
@@ -656,7 +719,7 @@ function loadSong(song) {
   recordBtn.disabled = !micStream;
 
   if (useSongArtToggle.checked && song.artwork) {
-    applySongArtworkBackground(song).catch(() => {});
+    applySongArtworkBackground(song).catch(() => setBackgroundPreset(bgPresetSelect.value || "electric"));
   }
 
   loadLyricsForCurrentSong();
@@ -1066,6 +1129,7 @@ accessCodeInput.addEventListener("keydown", (e) => {
 });
 
 setBackgroundPreset("electric");
+useSongArtToggle.checked = true;
 updatePreviewOrientation();
 showPromoPlaceholder();
 applyMicGain();

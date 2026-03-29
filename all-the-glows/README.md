@@ -4,8 +4,12 @@
 
 Place these files in this folder so the song can play and load artwork:
 
-- `0 Lead Vocals_01.mp3`
-- `1 Instrumental_01.mp3`
+- Lead vocals (either filename works):
+  - `0 Lead Vocals_01.mp3`
+  - `0 Lead Vocals.mp3`
+- Instrumental (either filename works):
+  - `1 Instrumental_01.mp3`
+  - `1 Instrumental.mp3`
 - One artwork file (any one of these names):
   - `cover.jpg` / `cover.jpeg` / `cover.png`
   - `All The Glows.jpg` / `.jpeg` / `.png`
