@@ -140,6 +140,8 @@ const videoFormatSelect = document.getElementById("videoFormatSelect");
 const videoOrientationSelect = document.getElementById("videoOrientationSelect");
 const recordGain = document.getElementById("recordGain");
 const recordGainValue = document.getElementById("recordGainValue");
+const mixDelayMs = document.getElementById("mixDelayMs");
+const mixDelayMsValue = document.getElementById("mixDelayMsValue");
 const enableCamBtn = document.getElementById("enableCamBtn");
 const recordBtn = document.getElementById("recordBtn");
 const stopRecordBtn = document.getElementById("stopRecordBtn");
@@ -193,6 +195,8 @@ let recMicMid;
 let recMicHigh;
 let recMicComp;
 let recMicShape;
+let recLeadDelay;
+let recInstDelay;
 
 let mediaRecorder;
 let recordedChunks = [];
@@ -615,6 +619,14 @@ function applyMicGain() {
   updateRecordingMixGains(smoothedMicLevel);
 }
 
+function applyMixDelay() {
+  const delayMs = Number(mixDelayMs.value);
+  const delaySeconds = Math.min(1, Math.max(0, delayMs / 1000));
+  mixDelayMsValue.textContent = `${Math.round(delaySeconds * 1000)} ms`;
+  if (recLeadDelay) recLeadDelay.delayTime.value = delaySeconds;
+  if (recInstDelay) recInstDelay.delayTime.value = delaySeconds;
+}
+
 async function setupRecordingBus() {
   if (!micStream || recDestination) return;
   recCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -627,6 +639,8 @@ async function setupRecordingBus() {
   recLeadGain = recCtx.createGain();
   recInstGain = recCtx.createGain();
   recMicGain = recCtx.createGain();
+  recLeadDelay = recCtx.createDelay(1);
+  recInstDelay = recCtx.createDelay(1);
 
   recMicLow = recCtx.createBiquadFilter();
   recMicLow.type = "lowshelf";
@@ -642,17 +656,20 @@ async function setupRecordingBus() {
   recMicShape = recCtx.createWaveShaper();
 
   recLeadSource.connect(recLeadGain);
-  recLeadGain.connect(recDestination);
-  recLeadGain.connect(recCtx.destination);
+  recLeadGain.connect(recLeadDelay);
+  recLeadDelay.connect(recDestination);
+  recLeadDelay.connect(recCtx.destination);
 
   recInstSource.connect(recInstGain);
-  recInstGain.connect(recDestination);
-  recInstGain.connect(recCtx.destination);
+  recInstGain.connect(recInstDelay);
+  recInstDelay.connect(recDestination);
+  recInstDelay.connect(recCtx.destination);
 
   recMicSource.connect(recMicLow).connect(recMicMid).connect(recMicHigh).connect(recMicComp).connect(recMicShape).connect(recMicGain).connect(recDestination);
 
   updateMicToneChain();
   applyMicGain();
+  applyMixDelay();
 }
 
 async function enableMic() {
@@ -1096,6 +1113,7 @@ replayBtn.addEventListener("click", replayRecording);
 downloadWavBtn.addEventListener("click", downloadRecording);
 resetRecordingBtn.addEventListener("click", resetRecordingSession);
 recordGain.addEventListener("input", applyMicGain);
+mixDelayMs.addEventListener("input", applyMixDelay);
 videoOrientationSelect.addEventListener("change", () => {
   updatePreviewOrientation();
   if (webcamStream) ensureCanvasStream().catch((err) => console.error(err));
