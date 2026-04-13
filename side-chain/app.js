@@ -743,7 +743,7 @@ async function loadSong(song) {
   setStatus(`Loaded: ${song.title}`);
 }
 
-function play() {
+function play({ suppressStatus = false } = {}) {
   if (!currentSong) return setStatus("Pick a song first.");
 
   if (!isPaused && leadAudio.currentTime < 0.05 && backingAudio.currentTime < 0.05) {
@@ -760,10 +760,10 @@ function play() {
       pauseBtn.textContent = "Pause";
       pauseBtn.disabled = false;
       stopBtn.disabled = false;
-      setStatus(`Playing: ${currentSong.title}`);
+      if (!suppressStatus) setStatus(`Playing: ${currentSong.title}`);
     })
     .catch((err) => {
-      setStatus("Playback failed. Reload song and try again.");
+      if (!suppressStatus) setStatus("Playback failed. Reload song and try again.");
       console.error(err);
     });
 }
@@ -987,6 +987,9 @@ async function startRecording() {
   };
 
   mediaRecorder.start();
+  if (currentSong && leadAudio.paused && backingAudio.paused) {
+    play({ suppressStatus: true });
+  }
   recordBtn.disabled = true;
   stopRecordBtn.disabled = false;
   refreshResetRecordingButton();
