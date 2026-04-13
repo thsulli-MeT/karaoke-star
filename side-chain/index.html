@@ -198,10 +198,15 @@
             Mic / Record Gain (dB)
             <input id="recordGain" type="range" min="-24" max="24" step="1" value="0" />
           </label>
+          <label>
+            Mix Delay Comp (ms)
+            <input id="mixDelayMs" type="range" min="0" max="1000" step="10" value="180" />
+          </label>
           <div class="gain-readout"><span id="recordGainValue">+0 dB</span></div>
+          <div class="gain-readout"><span id="mixDelayMsValue">180 ms</span></div>
         </div>
         <div class="row wrap led-button-row unified-record-actions">
-          <button id="recordBtn" disabled>Record</button>
+          <button id="recordBtn" disabled>Record + Play</button>
           <button id="stopRecordBtn" disabled>Stop</button>
           <button id="replayBtn" disabled>Replay</button>
           <button id="downloadWavBtn" disabled>Download</button>
