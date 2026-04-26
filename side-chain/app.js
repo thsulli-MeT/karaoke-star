@@ -745,6 +745,11 @@ async function loadSong(song) {
 
 function play({ suppressStatus = false } = {}) {
   if (!currentSong) return setStatus("Pick a song first.");
+  const nearTrackEnd = (audioEl) => Number.isFinite(audioEl.duration) && audioEl.duration > 0 && audioEl.currentTime >= audioEl.duration - 0.05;
+  if (nearTrackEnd(leadAudio) || nearTrackEnd(backingAudio)) {
+    leadAudio.currentTime = 0;
+    backingAudio.currentTime = 0;
+  }
 
   if (!isPaused && leadAudio.currentTime < 0.05 && backingAudio.currentTime < 0.05) {
     smoothedMicLevel = 0;
@@ -788,6 +793,8 @@ function pause() {
 function handleTrackEnded() {
   leadAudio.pause();
   backingAudio.pause();
+  leadAudio.currentTime = 0;
+  backingAudio.currentTime = 0;
   isPaused = false;
   pauseBtn.textContent = "Pause";
   pauseBtn.disabled = true;
